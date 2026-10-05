@@ -130,7 +130,18 @@ export default function Home() {
   };
 
   const safePhotos = Array.isArray(photos) ? photos : [];
-  const heroPhotos = safePhotos.filter(p => p && p.category === 'hero').slice(0, 4);
+  const heroPhotos = safePhotos
+    .filter(p => p && p.category === 'hero')
+    .map(p => {
+      if (p.imageUrl && p.imageUrl.includes('photo-1518199266791')) {
+        return { ...p, imageUrl: "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing" };
+      }
+      if (p.imageUrl && p.imageUrl.includes('photo-1517841905240')) {
+        return { ...p, imageUrl: "https://drive.google.com/file/d/1mLY9Y1cmPC9fpL1X4BDJmvSBHpM_42Eg/view?usp=sharing" };
+      }
+      return p;
+    })
+    .slice(0, 4);
   const albumPhotos = safePhotos.filter(p => p && (p.category === 'album' || !p.category));
 
   return (
@@ -250,13 +261,8 @@ export default function Home() {
             [
               { caption: "I Love You", url: "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing", rot: -4 },
               { caption: "Us.", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: 3 },
-<<<<<<< HEAD
               { caption: "I still remember this.", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: -5 },
               { caption: "One of my favorite memories.", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: 4 },
-=======
-              { caption: "I still remember this.", url: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=600&q=80", rot: -5 },
-              { caption: "One of my favorite memories.", url: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80", rot: 4 },
->>>>>>> afc94e5 (Make hero cutout sticker photos visible on mobile phone screens and update hero photo fallback)
               { caption: "You made this moment special.", url: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80", rot: -3 },
               { caption: "Some moments never really leave you.", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80", rot: 2 }
             ].map((item, idx) => (

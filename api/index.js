@@ -342,15 +342,15 @@ app.get('/api/photos', async (req, res) => {
   return res.json([
     {
       _id: 'p1',
-      imageUrl: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80",
-      caption: "That day.",
+      imageUrl: "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing",
+      caption: "",
       rotation: -6,
       category: 'hero'
     },
     {
       _id: 'p2',
-      imageUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=800&q=80",
-      caption: "Us.",
+      imageUrl: "https://drive.google.com/file/d/1mLY9Y1cmPC9fpL1X4BDJmvSBHpM_42Eg/view?usp=sharing",
+      caption: "",
       rotation: 5,
       category: 'hero'
     },
