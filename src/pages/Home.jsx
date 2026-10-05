@@ -284,22 +284,18 @@ export default function Home() {
               title: "The Spark",
               subtitle: "Where it all began",
               date: "October 14, 2022",
-              description: "Our eyes met for the very first time, and instantly, standard conversations turned into hours of effortless connection.",
-              imageUrl: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"
-            },
+              description: "Our eyes met for the very first time, and instantly, standard conversations turned into hours of effortless connection.",            },
             {
               title: "Our First Late-Night Drive",
               subtitle: "City lights & endless talk",
               date: "February 14, 2023",
               description: "Playing our favorite playlist on loop while driving nowhere in particular. Neither of us wanted the night to end.",
-              imageUrl: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=400&q=80"
             },
             {
               title: "The Unforgettable Trip",
               subtitle: "By the ocean",
               date: "August 20, 2023",
               description: "Watching the sunrise over the waves, wrapped in a blanket, sharing quiet dreams for the future.",
-              imageUrl: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=400&q=80"
             }
           ]).map((evt, idx) => (
             <motion.div
