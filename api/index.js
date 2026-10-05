@@ -9,7 +9,6 @@ import { generateToken, requireAuth, requireAdmin } from './utils/auth.js';
 import { sendEmail, buildNotificationEmailHtml } from './utils/email.js';
 
 import User from './models/User.js';
-import Message from './models/Message.js';
 import Photo from './models/Photo.js';
 import TimelineEvent from './models/TimelineEvent.js';
 import Location from './models/Location.js';
@@ -30,16 +29,15 @@ app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 app.use(cookieParser());
 
-// In-memory data store fallback
+// Fallback in-memory data store for Logins and Messages
 const inMemoryStore = {
-  messages: [],
   responseMessages: [],
   userLogins: [],
   notifications: [
     {
       _id: 'notif_1',
-      title: 'Minimal Romantic Experience Active 💖',
-      message: 'Website is ready for Her to visit and leave a response.',
+      title: 'Romantic Experience Ready 💖',
+      message: 'Website is listening for Her name sign-in and messages.',
       type: 'system',
       read: false,
       createdAt: new Date()
@@ -61,9 +59,8 @@ app.use(async (req, res, next) => {
 });
 
 // ==========================================
-// 1. NAME LOGIN & AUTH ROUTES
+// 1. NAME SIGN-IN ROUTE
 // ==========================================
-// Simple Her Name Login
 app.post('/api/auth/name-login', async (req, res) => {
   try {
     const { name } = req.body;
@@ -72,49 +69,39 @@ app.post('/api/auth/name-login', async (req, res) => {
     }
 
     const cleanName = name.trim();
-    
-    // Store in-memory
-    inMemoryStore.userLogins.unshift({
+    const loginEntry = {
+      _id: 'login_' + Date.now(),
       name: cleanName,
-      timestamp: new Date(),
-      ip: req.ip || 'anonymous'
-    });
+      timestamp: new Date()
+    };
 
-    // Record Analytics Event
+    inMemoryStore.userLogins.unshift(loginEntry);
+
+    // Save to MongoDB if available
     await AnalyticsEvent.create({
       eventType: 'Login',
-      metadata: { visitorName: cleanName }
+      metadata: { visitorName: cleanName },
+      timestamp: new Date()
     }).catch(() => {});
 
-    // Create Admin Notification
-    const notif = await Notification.create({
-      title: `Her Logged In: ${cleanName} 💖`,
-      message: `${cleanName} just entered the romantic website.`,
+    await Notification.create({
+      title: `Her Signed In: ${cleanName} 💖`,
+      message: `${cleanName} signed in on ${new Date().toLocaleString()}`,
       type: 'login',
       link: '/admin'
-    }).catch(() => null);
+    }).catch(() => {});
 
-    if (!notif) {
-      inMemoryStore.notifications.unshift({
-        _id: 'notif_' + Date.now(),
-        title: `Her Logged In: ${cleanName} 💖`,
-        message: `${cleanName} just entered the website.`,
-        type: 'login',
-        createdAt: new Date()
-      });
-    }
-
-    // Optionally send email notification to Admin
+    // Email Notification to Admin
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@liliye.love';
     sendEmail({
       to: adminEmail,
-      subject: `💖 ${cleanName} just logged into your website!`,
-      text: `${cleanName} entered your romantic experience. Check your admin dashboard for details.`,
+      subject: `💖 ${cleanName} signed into your website!`,
+      text: `${cleanName} signed in at ${new Date().toLocaleString()}`,
       html: buildNotificationEmailHtml({
-        title: `${cleanName} Logged In 💖`,
-        messageText: `${cleanName} just entered your private website.`,
+        title: `${cleanName} Signed In 💖`,
+        messageText: `${cleanName} signed into your website on ${new Date().toLocaleString()}`,
         actionUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin`,
-        actionText: "Open Admin Dashboard"
+        actionText: "View Admin Dashboard"
       })
     });
 
@@ -123,25 +110,23 @@ app.post('/api/auth/name-login', async (req, res) => {
 
     return res.json({ token, user: userObj });
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to record login.' });
+    return res.status(500).json({ error: 'Failed to record sign-in.' });
   }
 });
 
-// Admin / Secret Login
+// Admin Login Route
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email and password are required.' });
+      return res.status(400).json({ error: 'Email and password required.' });
     }
 
     const cleanEmail = email.trim().toLowerCase();
     const adminEmail = (process.env.ADMIN_EMAIL || 'admin@liliye.love').toLowerCase();
     const adminPass = process.env.ADMIN_PASSWORD || 'LiliyeAdmin2026!';
-    const herEmail = (process.env.HER_EMAIL || 'her@liliye.love').toLowerCase();
-    const herPass = process.env.HER_PASSWORD || 'LiliyeLove2026!';
 
-    // Try MongoDB lookup
+    // MongoDB Lookup
     let user = null;
     try {
       user = await User.findOne({ email: cleanEmail });
@@ -152,32 +137,17 @@ app.post('/api/auth/login', async (req, res) => {
       if (isMatch) {
         user.lastLogin = new Date();
         await user.save().catch(() => {});
-
         const token = generateToken(user);
-        res.cookie('token', token, {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          maxAge: 30 * 24 * 60 * 60 * 1000
-        });
-
-        return res.json({
-          token,
-          user: { id: user._id, email: user.email, role: user.role, name: user.name }
-        });
+        res.cookie('token', token, { httpOnly: true, maxAge: 30 * 24 * 60 * 60 * 1000 });
+        return res.json({ token, user: { id: user._id, email: user.email, role: user.role, name: user.name } });
       }
     }
 
-    // Fallback credentials
+    // Fallback Admin Check
     if (cleanEmail === adminEmail && (password === adminPass || password === 'admin123' || password === 'LiliyeAdmin2026!')) {
       const mockAdmin = { id: 'admin_101', email: adminEmail, role: 'admin', name: 'Me' };
       const token = generateToken(mockAdmin);
       return res.json({ token, user: mockAdmin });
-    }
-
-    if (cleanEmail === herEmail && (password === herPass || password === 'her123' || password === 'LiliyeLove2026!')) {
-      const mockHer = { id: 'her_102', email: herEmail, role: 'her', name: 'My Love' };
-      const token = generateToken(mockHer);
-      return res.json({ token, user: mockHer });
     }
 
     return res.status(401).json({ error: 'Invalid login credentials.' });
@@ -203,7 +173,7 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // ==========================================
-// 2. HER END-OF-PAGE RESPONSE MESSAGE ROUTE
+// 2. HER MESSAGE RECEIVE ROUTE (Name, Message, Date, Time)
 // ==========================================
 app.post('/api/events/response-message', async (req, res) => {
   try {
@@ -214,48 +184,39 @@ app.post('/api/events/response-message', async (req, res) => {
 
     const senderName = (name && name.trim()) ? name.trim() : 'Her';
     const cleanMsg = message.trim();
+    const now = new Date();
 
     const responseObj = {
       _id: 'resp_' + Date.now(),
       name: senderName,
       message: cleanMsg,
-      createdAt: new Date()
+      timestamp: now
     };
 
     inMemoryStore.responseMessages.unshift(responseObj);
 
-    // Track Analytics Event
+    // Save to MongoDB if available
     await AnalyticsEvent.create({
       eventType: 'Final button clicked',
-      metadata: { name: senderName, responseText: cleanMsg }
+      metadata: { name: senderName, responseText: cleanMsg },
+      timestamp: now
     }).catch(() => {});
 
-    // Create Admin Notification
-    const notif = await Notification.create({
-      title: `💌 ${senderName} Left You A Message!`,
-      message: `"${cleanMsg.substring(0, 70)}..."`,
+    await Notification.create({
+      title: `💌 ${senderName} Sent You A Message!`,
+      message: `"${cleanMsg}"`,
       type: 'final_button',
       link: '/admin'
-    }).catch(() => null);
+    }).catch(() => {});
 
-    if (!notif) {
-      inMemoryStore.notifications.unshift({
-        _id: 'notif_' + Date.now(),
-        title: `💌 ${senderName} Left You A Message!`,
-        message: `"${cleanMsg.substring(0, 70)}..."`,
-        type: 'final_button',
-        createdAt: new Date()
-      });
-    }
-
-    // Send email notification to Admin
+    // Email Notification to Admin
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@liliye.love';
     sendEmail({
       to: adminEmail,
-      subject: `💌 ${senderName} Left You A Personal Message on the Website!`,
-      text: `${senderName} wrote: "${cleanMsg}". Check your admin dashboard.`,
+      subject: `💌 ${senderName} Sent You A Message!`,
+      text: `${senderName} wrote: "${cleanMsg}" on ${now.toLocaleString()}`,
       html: buildNotificationEmailHtml({
-        title: `${senderName} Left You A Message! 💌`,
+        title: `${senderName} Sent You A Message! 💌`,
         messageText: `"${cleanMsg}"`,
         actionUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin`,
         actionText: "View Message in Admin Dashboard"
@@ -268,7 +229,7 @@ app.post('/api/events/response-message', async (req, res) => {
       data: responseObj
     });
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to save your message.' });
+    return res.status(500).json({ error: 'Failed to save message.' });
   }
 });
 
@@ -502,71 +463,47 @@ app.put('/api/locations', requireAdmin, async (req, res) => {
   }
 });
 
-// Messages (Chat)
-app.get('/api/messages', requireAuth, async (req, res) => {
-  try {
-    const messages = await Message.find().sort({ createdAt: 1 });
-    if (messages && messages.length > 0) return res.json(messages);
-  } catch (err) {}
-
-  return res.json(inMemoryStore.messages);
-});
-
-app.post('/api/messages', requireAuth, async (req, res) => {
-  try {
-    const { content } = req.body;
-    if (!content || !content.trim()) return res.status(400).json({ error: 'Message cannot be empty.' });
-
-    const sender = req.user;
-    const msgObj = {
-      _id: 'msg_' + Date.now(),
-      senderId: sender.id || 'her_id',
-      senderRole: sender.role || 'her',
-      content: content.trim(),
-      read: false,
-      createdAt: new Date()
-    };
-
-    inMemoryStore.messages.push(msgObj);
-
-    return res.status(201).json(msgObj);
-  } catch (err) {
-    return res.status(500).json({ error: 'Failed to send message.' });
-  }
-});
-
 // ==========================================
-// 4. ANALYTICS & ADMIN DASHBOARD ROUTES
+// 4. ADMIN DASHBOARD ANALYTICS ROUTE (Who Signed In & Messages Received)
 // ==========================================
 app.post('/api/analytics/session', async (req, res) => res.json({ success: true }));
 app.post('/api/analytics/event', async (req, res) => res.status(201).json({ success: true }));
 
 app.get('/api/analytics/dashboard', requireAdmin, async (req, res) => {
   try {
-    const events = await AnalyticsEvent.find({ eventType: { $in: ['Login', 'Final button clicked'] } })
-      .sort({ timestamp: -1 })
-      .limit(50);
+    let mongoLogins = [];
+    let mongoResponses = [];
 
-    const formattedEvents = events.map(e => ({
-      _id: e._id,
-      name: e.metadata?.visitorName || e.metadata?.name || 'Her',
-      message: e.metadata?.responseText || '',
-      type: e.eventType,
-      timestamp: e.timestamp
-    }));
+    try {
+      const loginEvents = await AnalyticsEvent.find({ eventType: 'Login' }).sort({ timestamp: -1 }).limit(30);
+      mongoLogins = loginEvents.map(e => ({
+        _id: e._id,
+        name: e.metadata?.visitorName || 'Her',
+        timestamp: e.timestamp || e.createdAt
+      }));
+
+      const responseEvents = await AnalyticsEvent.find({ eventType: 'Final button clicked' }).sort({ timestamp: -1 }).limit(30);
+      mongoResponses = responseEvents.map(e => ({
+        _id: e._id,
+        name: e.metadata?.name || 'Her',
+        message: e.metadata?.responseText || '',
+        timestamp: e.timestamp || e.createdAt
+      }));
+    } catch (e) {}
+
+    const userLogins = mongoLogins.length > 0 ? mongoLogins : inMemoryStore.userLogins;
+    const responseMessages = mongoResponses.length > 0 ? mongoResponses : inMemoryStore.responseMessages;
 
     return res.json({
-      totalSessions: inMemoryStore.userLogins.length || 1,
-      userLogins: inMemoryStore.userLogins,
-      responseMessages: inMemoryStore.responseMessages,
-      recentEvents: formattedEvents.length > 0 ? formattedEvents : inMemoryStore.userLogins
+      totalSessions: userLogins.length || 1,
+      userLogins,
+      responseMessages
     });
   } catch (err) {
     return res.json({
       totalSessions: inMemoryStore.userLogins.length || 1,
       userLogins: inMemoryStore.userLogins,
-      responseMessages: inMemoryStore.responseMessages,
-      recentEvents: inMemoryStore.userLogins
+      responseMessages: inMemoryStore.responseMessages
     });
   }
 });

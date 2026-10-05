@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { 
-  BarChart3, FileText, Image, Video, Clock, Music, MapPin, 
-  MessageCircle, Bell, Settings, LogOut, Heart, Shield 
+  BarChart3, FileText, Image, Clock, MapPin, 
+  Bell, LogOut, Heart, Shield 
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -34,11 +34,9 @@ export default function AdminLayout() {
   const navItems = [
     { label: 'Overview', path: '/admin', icon: BarChart3 },
     { label: 'Site Content', path: '/admin/content', icon: FileText },
-    { label: 'Photos & Videos', path: '/admin/media', icon: Image },
+    { label: 'Photos', path: '/admin/media', icon: Image },
     { label: 'Timeline', path: '/admin/timeline', icon: Clock },
-    { label: 'Music', path: '/admin/music', icon: Music },
     { label: 'Locations', path: '/admin/locations', icon: MapPin },
-    { label: 'Messages', path: '/admin/messages', icon: MessageCircle },
     { label: 'Notifications', path: '/admin/notifications', icon: Bell },
   ];
 
