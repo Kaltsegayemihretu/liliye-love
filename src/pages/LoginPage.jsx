@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Heart, Lock, Mail, Sparkles, ArrowRight, AlertCircle } from 'lucide-react';
+import { Heart, Lock, Mail, ArrowRight, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
 
@@ -112,8 +112,8 @@ export default function LoginPage() {
         </form>
 
         <div className="mt-8 pt-6 border-t border-[#ffd0e0] text-xs text-slate-500 font-medium">
-          <p>Default Her demo login: <span className="font-mono font-bold text-[#ff2a75]">her@liliye.love / her123</span></p>
-          <p className="mt-1">Default Admin demo login: <span className="font-mono font-bold text-[#80003c]">admin@liliye.love / admin123</span></p>
+          <p>Her Login: <span className="font-mono font-bold text-[#ff2a75]">her@liliye.love / LiliyeLove2026!</span></p>
+          <p className="mt-1">Admin Login: <span className="font-mono font-bold text-[#80003c]">admin@liliye.love / LiliyeAdmin2026!</span></p>
         </div>
 
       </div>

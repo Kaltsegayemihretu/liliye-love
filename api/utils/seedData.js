@@ -11,9 +11,9 @@ export async function seedInitialData() {
   try {
     // 1. Seed Users
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@liliye.love';
-    const adminPass = process.env.ADMIN_PASSWORD || 'admin123';
+    const adminPass = process.env.ADMIN_PASSWORD || 'LiliyeAdmin2026!';
     const herEmail = process.env.HER_EMAIL || 'her@liliye.love';
-    const herPass = process.env.HER_PASSWORD || 'her123';
+    const herPass = process.env.HER_PASSWORD || 'LiliyeLove2026!';
 
     let adminUser = await User.findOne({ email: adminEmail.toLowerCase() });
     if (!adminUser) {
