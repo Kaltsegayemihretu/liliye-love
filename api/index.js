@@ -420,7 +420,7 @@ app.get('/api/photos', async (req, res) => {
     },
     {
       _id: 'p3',
-      imageUrl: "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing",
+      imageUrl: "https://drive.google.com/file/d/1Ed4PxbKSH2gTTmCU1XCE6ln3S_GtlP6x/view?usp=sharing",
       caption: "",
       rotation: -4,
       category: 'album'
@@ -548,36 +548,79 @@ app.get('/api/analytics/dashboard', requireAdmin, async (req, res) => {
     let mongoResponses = [];
 
     try {
-      const loginEvents = await AnalyticsEvent.find({ eventType: 'Login' }).sort({ timestamp: -1 }).limit(30);
+      const loginEvents = await AnalyticsEvent.find({ eventType: 'Login' }).sort({ timestamp: -1 });
       mongoLogins = loginEvents.map(e => ({
-        _id: e._id,
+        _id: e._id ? e._id.toString() : 'log_' + Math.random(),
         name: e.metadata?.visitorName || 'Her',
         timestamp: e.timestamp || e.createdAt
       }));
 
-      const responseEvents = await AnalyticsEvent.find({ eventType: 'Final button clicked' }).sort({ timestamp: -1 }).limit(30);
+      const responseEvents = await AnalyticsEvent.find({ eventType: 'Final button clicked' }).sort({ timestamp: -1 });
       mongoResponses = responseEvents.map(e => ({
-        _id: e._id,
+        _id: e._id ? e._id.toString() : 'resp_' + Math.random(),
         name: e.metadata?.name || 'Her',
         message: e.metadata?.responseText || '',
         timestamp: e.timestamp || e.createdAt
       }));
     } catch (e) {}
 
-    const userLogins = mongoLogins.length > 0 ? mongoLogins : inMemoryStore.userLogins;
-    const responseMessages = mongoResponses.length > 0 ? mongoResponses : inMemoryStore.responseMessages;
+    // Combine MongoDB and in-memory list without duplicates
+    const combinedLoginsMap = new Map();
+    inMemoryStore.userLogins.forEach(item => combinedLoginsMap.set(item._id, item));
+    mongoLogins.forEach(item => combinedLoginsMap.set(item._id, item));
+
+    const combinedResponsesMap = new Map();
+    inMemoryStore.responseMessages.forEach(item => combinedResponsesMap.set(item._id, item));
+    mongoResponses.forEach(item => combinedResponsesMap.set(item._id, item));
+
+    const userLogins = Array.from(combinedLoginsMap.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    const responseMessages = Array.from(combinedResponsesMap.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     return res.json({
-      totalSessions: userLogins.length || 1,
+      totalSessions: userLogins.length,
       userLogins,
       responseMessages
     });
   } catch (err) {
     return res.json({
-      totalSessions: inMemoryStore.userLogins.length || 1,
+      totalSessions: inMemoryStore.userLogins.length,
       userLogins: inMemoryStore.userLogins,
       responseMessages: inMemoryStore.responseMessages
     });
+  }
+});
+
+// Clear all analytics & reset counters to 0
+app.delete('/api/analytics/clear', requireAdmin, async (req, res) => {
+  try {
+    await AnalyticsEvent.deleteMany({}).catch(() => {});
+    await VisitorSession.deleteMany({}).catch(() => {});
+    await Notification.deleteMany({}).catch(() => {});
+
+    inMemoryStore.userLogins = [];
+    inMemoryStore.responseMessages = [];
+    inMemoryStore.notifications = [];
+
+    return res.json({ success: true, message: 'All analytics and overview data reset to 0.' });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to reset analytics data.' });
+  }
+});
+
+// Delete specific sign-in or message entry by ID
+app.delete('/api/analytics/entry/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await AnalyticsEvent.findByIdAndDelete(id).catch(() => {});
+    await Notification.findByIdAndDelete(id).catch(() => {});
+
+    inMemoryStore.userLogins = inMemoryStore.userLogins.filter(i => i._id !== id);
+    inMemoryStore.responseMessages = inMemoryStore.responseMessages.filter(i => i._id !== id);
+    inMemoryStore.notifications = inMemoryStore.notifications.filter(i => i._id !== id);
+
+    return res.json({ success: true, id });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to delete entry.' });
   }
 });
 

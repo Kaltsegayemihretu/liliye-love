@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Heart, Sparkles, User, RefreshCw, Clock } from 'lucide-react';
+import { Users, Heart, Sparkles, User, RefreshCw, Clock, Trash2, RotateCcw } from 'lucide-react';
 import { api } from '../../services/api';
 
 export default function AdminDashboard() {
@@ -23,13 +23,38 @@ export default function AdminDashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleClearAll = async () => {
+    if (window.confirm("Are you sure you want to reset all dashboard overview data to 0? This will permanently delete all recorded visits, sign-ins, and messages.")) {
+      try {
+        await api.clearDashboardAnalytics();
+        setData({ totalSessions: 0, userLogins: [], responseMessages: [] });
+      } catch (err) {
+        alert("Failed to reset dashboard data: " + err.message);
+      }
+    }
+  };
+
+  const handleDeleteEntry = async (id) => {
+    try {
+      await api.deleteAnalyticsEntry(id);
+      setData(prev => ({
+        ...prev,
+        totalSessions: Math.max(0, (prev?.totalSessions || 0) - 1),
+        userLogins: (prev?.userLogins || []).filter(i => i._id !== id),
+        responseMessages: (prev?.responseMessages || []).filter(i => i._id !== id)
+      }));
+    } catch (err) {
+      alert("Failed to delete entry: " + err.message);
+    }
+  };
+
   if (loading) {
     return <div className="p-8 text-center text-slate-400 font-semibold">Loading Admin Dashboard...</div>;
   }
 
   const userLogins = data?.userLogins || [];
   const responseMessages = data?.responseMessages || [];
-  const totalVisits = data?.totalSessions || userLogins.length || 1;
+  const totalVisits = data?.totalSessions || userLogins.length || 0;
 
   const formatDate = (ts) => {
     if (!ts) return 'Just now';
@@ -47,7 +72,7 @@ export default function AdminDashboard() {
     <div className="space-y-8 max-w-5xl">
       
       {/* Overview Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-extrabold text-slate-900 flex items-center gap-2">
             <span>Admin Overview</span>
@@ -58,12 +83,23 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <button
-          onClick={loadAnalytics}
-          className="p-2.5 rounded-full bg-white text-slate-600 hover:text-[#ff2a75] shadow-sm border border-[#ffd0e0]"
-        >
-          <RefreshCw className="w-4 h-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={loadAnalytics}
+            title="Refresh Data"
+            className="p-2.5 rounded-full bg-white text-slate-600 hover:text-[#ff2a75] shadow-sm border border-[#ffd0e0] cursor-pointer"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={handleClearAll}
+            className="px-4 py-2.5 rounded-full bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-600 hover:text-white text-xs font-bold transition-colors flex items-center gap-1.5 shadow-sm cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>Reset Everything To 0</span>
+          </button>
+        </div>
       </div>
 
       {/* Stats Summary Cards */}
@@ -101,15 +137,17 @@ export default function AdminDashboard() {
 
       {/* 1. HER MESSAGES RECEIVED (NAME, MESSAGE, DATE, TIME) */}
       <div className="glass-card rounded-3xl p-6 shadow-xl border border-white/80 space-y-4">
-        <h2 className="font-display text-xl font-extrabold text-slate-900 flex items-center gap-2">
-          <Heart className="w-5 h-5 text-[#ff2a75] fill-[#ff2a75]" />
-          Messages Received From Her 💌
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-xl font-extrabold text-slate-900 flex items-center gap-2">
+            <Heart className="w-5 h-5 text-[#ff2a75] fill-[#ff2a75]" />
+            Messages Received From Her ({responseMessages.length}) 💌
+          </h2>
+        </div>
 
         <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
           {responseMessages.length > 0 ? (
             responseMessages.map((msg, idx) => (
-              <div key={msg._id || idx} className="p-5 rounded-2xl bg-white border border-[#ffd0e0] shadow-md space-y-2">
+              <div key={msg._id || idx} className="p-5 rounded-2xl bg-white border border-[#ffd0e0] shadow-md space-y-2 relative group">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <div className="flex items-center gap-2">
                     <span className="w-8 h-8 rounded-full bg-[#ffe4ec] text-[#ff2a75] flex items-center justify-center text-sm font-bold shadow-sm">
@@ -120,12 +158,25 @@ export default function AdminDashboard() {
                       <div className="text-[10px] text-slate-400 font-mono">Sent Message</div>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs font-bold text-[#80003c] font-mono">{formatDate(msg.timestamp || msg.createdAt)}</div>
-                    <div className="text-[11px] text-slate-500 font-mono flex items-center justify-end gap-1">
-                      <Clock className="w-3 h-3 text-[#ff2a75]" />
-                      {formatTime(msg.timestamp || msg.createdAt)}
+
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-xs font-bold text-[#80003c] font-mono">{formatDate(msg.timestamp || msg.createdAt)}</div>
+                      <div className="text-[11px] text-slate-500 font-mono flex items-center justify-end gap-1">
+                        <Clock className="w-3 h-3 text-[#ff2a75]" />
+                        {formatTime(msg.timestamp || msg.createdAt)}
+                      </div>
                     </div>
+
+                    {msg._id && (
+                      <button
+                        onClick={() => handleDeleteEntry(msg._id)}
+                        title="Delete Message"
+                        className="p-1.5 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -146,10 +197,12 @@ export default function AdminDashboard() {
 
       {/* 2. WHO SIGNED IN (NAME, DATE, TIME) */}
       <div className="glass-card rounded-3xl p-6 shadow-xl border border-white/80 space-y-4">
-        <h2 className="font-display text-xl font-extrabold text-slate-900 flex items-center gap-2">
-          <User className="w-5 h-5 text-[#ff2a75]" />
-          Who Signed In (Name, Date & Time Log)
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="font-display text-xl font-extrabold text-slate-900 flex items-center gap-2">
+            <User className="w-5 h-5 text-[#ff2a75]" />
+            Who Signed In (Name, Date & Time Log - {userLogins.length})
+          </h2>
+        </div>
 
         <div className="space-y-2.5 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
           {userLogins.length > 0 ? (
@@ -165,12 +218,24 @@ export default function AdminDashboard() {
                   </div>
                 </div>
 
-                <div className="text-right">
-                  <div className="font-mono font-bold text-slate-800">{formatDate(item.timestamp || item.createdAt)}</div>
-                  <div className="text-[11px] text-[#ff2a75] font-mono font-bold flex items-center justify-end gap-1">
-                    <Clock className="w-3 h-3" />
-                    {formatTime(item.timestamp || item.createdAt)}
+                <div className="flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="font-mono font-bold text-slate-800">{formatDate(item.timestamp || item.createdAt)}</div>
+                    <div className="text-[11px] text-[#ff2a75] font-mono font-bold flex items-center justify-end gap-1">
+                      <Clock className="w-3 h-3" />
+                      {formatTime(item.timestamp || item.createdAt)}
+                    </div>
                   </div>
+
+                  {item._id && (
+                    <button
+                      onClick={() => handleDeleteEntry(item._id)}
+                      title="Delete Sign-in Record"
+                      className="p-1.5 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))

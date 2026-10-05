@@ -100,6 +100,8 @@ export const api = {
     return fetchApi('/analytics/event', { method: 'POST', body: JSON.stringify({ eventType, sessionId, metadata }) });
   },
   getDashboardAnalytics: () => fetchApi('/analytics/dashboard'),
+  clearDashboardAnalytics: () => fetchApi('/analytics/clear', { method: 'DELETE' }),
+  deleteAnalyticsEntry: (id) => fetchApi(`/analytics/entry/${id}`, { method: 'DELETE' }),
   getNotifications: () => fetchApi('/notifications'),
   markAllNotificationsRead: () => fetchApi('/notifications/read-all', { method: 'PUT' })
 };
