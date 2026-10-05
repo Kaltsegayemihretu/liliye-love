@@ -149,8 +149,8 @@ export default function Home() {
           {/* Cutout Sticker Photos floating around hero */}
           <div className="hidden lg:block absolute top-12 left-10 w-40">
             <CutoutSticker
-              imageUrl={heroPhotos[0]?.imageUrl || "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=400&q=80"}
-              caption="That day."
+              imageUrl={heroPhotos[0]?.imageUrl || "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing"}
+              caption=" "
               rotation={-8}
               onClick={() => setSelectedImage(heroPhotos[0]?.imageUrl)}
             />
@@ -158,8 +158,8 @@ export default function Home() {
 
           <div className="hidden lg:block absolute top-16 right-10 w-40">
             <CutoutSticker
-              imageUrl={heroPhotos[1]?.imageUrl || "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"}
-              caption="Us."
+              imageUrl={heroPhotos[1]?.imageUrl || "https://drive.google.com/file/d/1mLY9Y1cmPC9fpL1X4BDJmvSBHpM_42Eg/view?usp=sharing"}
+              caption=""
               rotation={6}
               onClick={() => setSelectedImage(heroPhotos[1]?.imageUrl)}
             />
