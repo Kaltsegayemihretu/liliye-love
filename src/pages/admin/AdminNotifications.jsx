@@ -9,9 +9,14 @@ export default function AdminNotifications() {
   const loadNotifications = async () => {
     try {
       const data = await api.getNotifications();
-      setNotifications(data);
+      if (Array.isArray(data)) {
+        setNotifications(data);
+      } else {
+        setNotifications([]);
+      }
     } catch (err) {
       console.warn('Failed to load notifications:', err);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -22,9 +27,13 @@ export default function AdminNotifications() {
   }, []);
 
   const handleMarkAllRead = async () => {
-    await api.markAllNotificationsRead();
-    loadNotifications();
+    try {
+      await api.markAllNotificationsRead();
+      loadNotifications();
+    } catch (e) {}
   };
+
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -35,13 +44,13 @@ export default function AdminNotifications() {
             Admin Notifications Center
           </h1>
           <p className="text-sm text-slate-600 font-semibold mt-1">
-            Real-time alerts for messages, logins, and final button clicks.
+            Real-time alerts for when Her signs in or leaves a message.
           </p>
         </div>
 
         <button
           onClick={handleMarkAllRead}
-          className="px-4 py-2 rounded-full bg-white text-[#ff2a75] font-bold text-xs shadow-sm border border-[#ffd0e0] flex items-center gap-1.5 hover:bg-[#ffe4ec]"
+          className="px-4 py-2 rounded-full bg-white text-[#ff2a75] font-bold text-xs shadow-sm border border-[#ffd0e0] flex items-center gap-1.5 hover:bg-[#ffe4ec] cursor-pointer"
         >
           <CheckCheck className="w-4 h-4" />
           Mark All Read
@@ -50,13 +59,13 @@ export default function AdminNotifications() {
 
       <div className="space-y-3">
         {loading ? (
-          <div className="text-center py-12 text-slate-400 font-semibold">Loading notifications...</div>
-        ) : notifications.length === 0 ? (
-          <div className="text-center py-12 text-slate-400 font-semibold">No notifications yet.</div>
+          <div className="text-center py-12 text-slate-400 font-semibold text-xs">Loading notifications...</div>
+        ) : safeNotifications.length === 0 ? (
+          <div className="text-center py-12 text-slate-400 font-semibold text-xs">No notifications recorded yet.</div>
         ) : (
-          notifications.map((notif) => (
+          safeNotifications.map((notif, idx) => (
             <div
-              key={notif._id}
+              key={notif._id || idx}
               className={`p-4 rounded-2xl border transition-all flex items-start gap-4 ${
                 notif.read 
                   ? 'bg-white/60 border-slate-200 text-slate-600' 
@@ -70,7 +79,7 @@ export default function AdminNotifications() {
                 <div className="text-sm font-display font-extrabold text-slate-900">{notif.title}</div>
                 <div className="text-xs text-slate-600 font-medium mt-0.5">{notif.message}</div>
                 <div className="text-[10px] font-mono text-slate-400 mt-2">
-                  {new Date(notif.createdAt).toLocaleString()}
+                  {notif.createdAt ? new Date(notif.createdAt).toLocaleString() : 'Just now'}
                 </div>
               </div>
             </div>
