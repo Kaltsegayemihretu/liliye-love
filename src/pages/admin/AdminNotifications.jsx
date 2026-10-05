@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bell, CheckCheck, Heart } from 'lucide-react';
+import { Bell, CheckCheck, Heart, RefreshCw } from 'lucide-react';
 import { api } from '../../services/api';
 
 export default function AdminNotifications() {
@@ -24,6 +24,8 @@ export default function AdminNotifications() {
 
   useEffect(() => {
     loadNotifications();
+    const interval = setInterval(loadNotifications, 6000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleMarkAllRead = async () => {
@@ -48,13 +50,23 @@ export default function AdminNotifications() {
           </p>
         </div>
 
-        <button
-          onClick={handleMarkAllRead}
-          className="px-4 py-2 rounded-full bg-white text-[#ff2a75] font-bold text-xs shadow-sm border border-[#ffd0e0] flex items-center gap-1.5 hover:bg-[#ffe4ec] cursor-pointer"
-        >
-          <CheckCheck className="w-4 h-4" />
-          Mark All Read
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={loadNotifications}
+            className="p-2 rounded-full bg-white text-slate-600 hover:text-[#ff2a75] shadow-sm border border-[#ffd0e0] cursor-pointer"
+            title="Refresh Notifications"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+
+          <button
+            onClick={handleMarkAllRead}
+            className="px-4 py-2 rounded-full bg-white text-[#ff2a75] font-bold text-xs shadow-sm border border-[#ffd0e0] flex items-center gap-1.5 hover:bg-[#ffe4ec] cursor-pointer"
+          >
+            <CheckCheck className="w-4 h-4" />
+            Mark All Read
+          </button>
+        </div>
       </div>
 
       <div className="space-y-3">

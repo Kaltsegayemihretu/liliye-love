@@ -19,6 +19,8 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     loadAnalytics();
+    const interval = setInterval(loadAnalytics, 6000);
+    return () => clearInterval(interval);
   }, []);
 
   if (loading) {

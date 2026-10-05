@@ -76,6 +76,14 @@ app.post('/api/auth/name-login', async (req, res) => {
     };
 
     inMemoryStore.userLogins.unshift(loginEntry);
+    inMemoryStore.notifications.unshift({
+      _id: 'notif_' + Date.now(),
+      title: `Her Signed In: ${cleanName} 💖`,
+      message: `${cleanName} signed into website at ${new Date().toLocaleTimeString()}`,
+      type: 'login',
+      read: false,
+      createdAt: new Date()
+    });
 
     // Save to MongoDB if available
     await AnalyticsEvent.create({
@@ -194,6 +202,14 @@ app.post('/api/events/response-message', async (req, res) => {
     };
 
     inMemoryStore.responseMessages.unshift(responseObj);
+    inMemoryStore.notifications.unshift({
+      _id: 'notif_' + Date.now(),
+      title: `💌 ${senderName} Sent You A Message!`,
+      message: `"${cleanMsg}"`,
+      type: 'final_button',
+      read: false,
+      createdAt: now
+    });
 
     // Save to MongoDB if available
     await AnalyticsEvent.create({
@@ -510,11 +526,89 @@ app.get('/api/analytics/dashboard', requireAdmin, async (req, res) => {
 
 app.get('/api/notifications', requireAdmin, async (req, res) => {
   try {
-    const notifications = await Notification.find().sort({ createdAt: -1 }).limit(30);
-    if (notifications && notifications.length > 0) return res.json(notifications);
-  } catch (err) {}
+    let mongoNotifs = [];
+    try {
+      mongoNotifs = await Notification.find().sort({ createdAt: -1 }).limit(30);
+    } catch (e) {}
 
-  return res.json(inMemoryStore.notifications);
+    let mongoEvents = [];
+    try {
+      mongoEvents = await AnalyticsEvent.find({ eventType: { $in: ['Login', 'Final button clicked'] } }).sort({ timestamp: -1 }).limit(30);
+    } catch (e) {}
+
+    const rawList = [];
+
+    if (mongoNotifs && mongoNotifs.length > 0) {
+      mongoNotifs.forEach(n => {
+        rawList.push({
+          _id: n._id ? n._id.toString() : 'n_' + Math.random(),
+          title: n.title,
+          message: n.message,
+          type: n.type || 'system',
+          read: n.read || false,
+          createdAt: n.createdAt || new Date()
+        });
+      });
+    }
+
+    if (mongoEvents && mongoEvents.length > 0) {
+      mongoEvents.forEach(e => {
+        const isLogin = e.eventType === 'Login';
+        const name = isLogin ? (e.metadata?.visitorName || 'Her') : (e.metadata?.name || 'Her');
+        const text = isLogin ? `${name} signed into the website.` : `"${e.metadata?.responseText || ''}"`;
+        rawList.push({
+          _id: 'evt_' + (e._id ? e._id.toString() : Math.random()),
+          title: isLogin ? `Her Signed In: ${name} 💖` : `💌 ${name} Sent You A Message!`,
+          message: text,
+          type: isLogin ? 'login' : 'final_button',
+          read: false,
+          createdAt: e.timestamp || e.createdAt || new Date()
+        });
+      });
+    }
+
+    // Include inMemoryStore items as fallbacks
+    inMemoryStore.userLogins.forEach(item => {
+      rawList.push({
+        _id: item._id,
+        title: `Her Signed In: ${item.name} 💖`,
+        message: `${item.name} signed into the website.`,
+        type: 'login',
+        read: false,
+        createdAt: item.timestamp
+      });
+    });
+
+    inMemoryStore.responseMessages.forEach(item => {
+      rawList.push({
+        _id: item._id,
+        title: `💌 ${item.name} Sent You A Message!`,
+        message: `"${item.message}"`,
+        type: 'final_button',
+        read: false,
+        createdAt: item.timestamp
+      });
+    });
+
+    inMemoryStore.notifications.forEach(item => {
+      rawList.push(item);
+    });
+
+    // Deduplicate by title & 2-second timestamp window
+    const uniqueMap = new Map();
+    rawList.forEach(item => {
+      const timeMs = Math.floor(new Date(item.createdAt).getTime() / 2000);
+      const key = `${item.title}_${timeMs}`;
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, item);
+      }
+    });
+
+    const sorted = Array.from(uniqueMap.values()).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return res.json(sorted.slice(0, 40));
+  } catch (err) {
+    return res.json(inMemoryStore.notifications);
+  }
 });
 
 app.put('/api/notifications/read-all', requireAdmin, async (req, res) => res.json({ success: true }));
