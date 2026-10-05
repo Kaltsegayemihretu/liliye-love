@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Heart, Sparkles, Clock, Send, CheckCircle2, User } from 'lucide-react';
 import { api } from '../services/api';
+import { formatImageUrl, getFallbackDriveUrl } from '../utils/image';
 
 import Navbar from '../components/Navbar';
 import CutoutSticker from '../components/CutoutSticker';
@@ -437,8 +438,15 @@ export default function Home() {
           className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 cursor-pointer"
         >
           <img
-            src={selectedImage}
+            src={formatImageUrl(selectedImage)}
             alt="Enlarged Memory"
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              const fallback = getFallbackDriveUrl(selectedImage);
+              if (e.currentTarget.src !== fallback) {
+                e.currentTarget.src = fallback;
+              }
+            }}
             className="max-w-full max-h-[85vh] rounded-3xl shadow-2xl border-4 border-white"
           />
         </div>

@@ -1,9 +1,21 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { formatImageUrl } from '../utils/image';
+import { formatImageUrl, getFallbackDriveUrl } from '../utils/image';
 
 export default function CutoutSticker({ imageUrl, caption, rotation = 0, className = '', onClick }) {
   const safeUrl = formatImageUrl(imageUrl);
+  const [imgSrc, setImgSrc] = useState(safeUrl);
+
+  useEffect(() => {
+    setImgSrc(formatImageUrl(imageUrl));
+  }, [imageUrl]);
+
+  const handleImageError = () => {
+    const fallback = getFallbackDriveUrl(imageUrl);
+    if (imgSrc !== fallback) {
+      setImgSrc(fallback);
+    }
+  };
 
   return (
     <motion.div
@@ -19,8 +31,10 @@ export default function CutoutSticker({ imageUrl, caption, rotation = 0, classNa
       {/* Image Container */}
       <div className="overflow-hidden rounded-2xl bg-slate-100 aspect-square">
         <img
-          src={safeUrl}
+          src={imgSrc}
           alt={caption || 'Memory'}
+          referrerPolicy="no-referrer"
+          onError={handleImageError}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
       </div>

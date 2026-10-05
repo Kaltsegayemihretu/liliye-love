@@ -151,7 +151,7 @@ export default function AdminMedia() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {photos.map((photo) => (
             <div key={photo._id} className="p-3 bg-white rounded-2xl border border-slate-200 shadow-md relative group">
-              <img src={formatImageUrl(photo.imageUrl)} alt={photo.caption} className="w-full h-36 object-cover rounded-xl" />
+              <img src={formatImageUrl(photo.imageUrl)} alt={photo.caption} referrerPolicy="no-referrer" className="w-full h-36 object-cover rounded-xl" />
               <div className="mt-2 text-center text-xs font-handwritten font-bold text-slate-800 truncate">
                 {photo.caption || 'No Caption'}
               </div>
