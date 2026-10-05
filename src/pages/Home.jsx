@@ -111,7 +111,7 @@ export default function Home() {
   const heroContent = content?.hero || {
     mainTitle: "I'LL WAIT FOR YOU TILL THE END OF TIME",
     subTitle1: "I'm serious about us, my love.",
-    subTitle2: "Maybe this isn't the end of our story.",
+    subTitle2: "This isn't the end of our story.",
     buttonText: "BEGIN"
   };
 
@@ -259,12 +259,12 @@ export default function Home() {
             ))
           ) : (
             [
-              { caption: "I Love You", url: "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing", rot: -4 },
-              { caption: "Us.", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: 3 },
-              { caption: "I still remember this.", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: -5 },
-              { caption: "One of my favorite memories.", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: 4 },
-              { caption: "You made this moment special.", url: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80", rot: -3 },
-              { caption: "Some moments never really leave you.", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80", rot: 2 }
+              { caption: "", url: "https://drive.google.com/file/d/1Ed4PxbKSH2gTTmCU1XCE6ln3S_GtlP6x/view?usp=drive_link", rot: -4 },
+              { caption: ".", url: "https://drive.google.com/file/d/1Xag3ljr61LxjeUc0UgDQpYJNvl3SMB-T/view?usp=sharing", rot: 3 },
+              { caption: "", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: -5 },
+              // { caption: "", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: 4 },
+              // { caption: "", url: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80", rot: -3 },
+              // { caption: "", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80", rot: 2 }
             ].map((item, idx) => (
               <motion.div
                 key={idx}
