@@ -146,22 +146,42 @@ export default function Home() {
           <div className="absolute top-10 left-10 w-72 h-72 bg-[#ffa8bc]/30 rounded-full blur-3xl animate-blob-1 pointer-events-none" />
           <div className="absolute bottom-10 right-10 w-80 h-80 bg-[#ffd0e0]/20 rounded-full blur-3xl animate-blob-2 pointer-events-none" />
 
-          {/* Cutout Sticker Photos floating around hero */}
-          <div className="hidden lg:block absolute top-12 left-10 w-40">
+          {/* Cutout Sticker Photos for Mobile Phones */}
+          <div className="flex lg:hidden justify-center items-center gap-4 mb-4 relative z-10">
+            <div className="w-32 sm:w-40">
+              <CutoutSticker
+                imageUrl={heroPhotos[0]?.imageUrl || "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing"}
+                caption={heroPhotos[0]?.caption || ""}
+                rotation={-5}
+                onClick={() => setSelectedImage(heroPhotos[0]?.imageUrl || "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing")}
+              />
+            </div>
+            <div className="w-32 sm:w-40">
+              <CutoutSticker
+                imageUrl={heroPhotos[1]?.imageUrl || "https://drive.google.com/file/d/1mLY9Y1cmPC9fpL1X4BDJmvSBHpM_42Eg/view?usp=sharing"}
+                caption={heroPhotos[1]?.caption || ""}
+                rotation={5}
+                onClick={() => setSelectedImage(heroPhotos[1]?.imageUrl || "https://drive.google.com/file/d/1mLY9Y1cmPC9fpL1X4BDJmvSBHpM_42Eg/view?usp=sharing")}
+              />
+            </div>
+          </div>
+
+          {/* Cutout Sticker Photos floating around hero for Desktop */}
+          <div className="hidden lg:block absolute top-12 left-10 w-40 z-10">
             <CutoutSticker
               imageUrl={heroPhotos[0]?.imageUrl || "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing"}
-              caption=" "
+              caption={heroPhotos[0]?.caption || ""}
               rotation={-8}
-              onClick={() => setSelectedImage(heroPhotos[0]?.imageUrl)}
+              onClick={() => setSelectedImage(heroPhotos[0]?.imageUrl || "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing")}
             />
           </div>
 
-          <div className="hidden lg:block absolute top-16 right-10 w-40">
+          <div className="hidden lg:block absolute top-16 right-10 w-40 z-10">
             <CutoutSticker
               imageUrl={heroPhotos[1]?.imageUrl || "https://drive.google.com/file/d/1mLY9Y1cmPC9fpL1X4BDJmvSBHpM_42Eg/view?usp=sharing"}
-              caption=""
+              caption={heroPhotos[1]?.caption || ""}
               rotation={6}
-              onClick={() => setSelectedImage(heroPhotos[1]?.imageUrl)}
+              onClick={() => setSelectedImage(heroPhotos[1]?.imageUrl || "https://drive.google.com/file/d/1mLY9Y1cmPC9fpL1X4BDJmvSBHpM_42Eg/view?usp=sharing")}
             />
           </div>
 
@@ -230,8 +250,13 @@ export default function Home() {
             [
               { caption: "I Love You", url: "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing", rot: -4 },
               { caption: "Us.", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: 3 },
+<<<<<<< HEAD
               { caption: "I still remember this.", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: -5 },
               { caption: "One of my favorite memories.", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: 4 },
+=======
+              { caption: "I still remember this.", url: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=600&q=80", rot: -5 },
+              { caption: "One of my favorite memories.", url: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80", rot: 4 },
+>>>>>>> afc94e5 (Make hero cutout sticker photos visible on mobile phone screens and update hero photo fallback)
               { caption: "You made this moment special.", url: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80", rot: -3 },
               { caption: "Some moments never really leave you.", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80", rot: 2 }
             ].map((item, idx) => (
