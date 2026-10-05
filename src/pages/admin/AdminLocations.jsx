@@ -5,10 +5,10 @@ import { api } from '../../services/api';
 export default function AdminLocations() {
   const [locations, setLocations] = useState({
     myLocationName: "MY PLACE",
-    myCity: "San Francisco, CA",
+    myCity: "Shegole, Addis Ababa",
     herLocationName: "HER PLACE",
-    herCity: "New York, NY",
-    distanceText: "2,572 miles",
+    herCity: "Addis Sefer, Addis Ababa",
+    distanceText: "4.5 kilometers",
     noteTop: "TWO PLACES. ONE DISTANCE.",
     noteBottom1: "Wait for you to come to me...",
     noteBottom2: "...but I'm always coming to you if you need me."

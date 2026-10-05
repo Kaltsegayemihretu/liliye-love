@@ -4,10 +4,10 @@ import { MapPin, Navigation, Heart } from 'lucide-react';
 
 export default function DistanceMap({ locationData }) {
   const myPlace = locationData?.myLocationName || "MY PLACE";
-  const myCity = locationData?.myCity || "San Francisco, CA";
+  const myCity = locationData?.myCity || "Shegole, Addis Ababa";
   const herPlace = locationData?.herLocationName || "HER PLACE";
-  const herCity = locationData?.herCity || "New York, NY";
-  const distance = locationData?.distanceText || "2,572 miles";
+  const herCity = locationData?.herCity || "Addis Sefer, Addis Ababa";
+  const distance = locationData?.distanceText || "4.5 kilometers";
   const noteTop = locationData?.noteTop || "TWO PLACES. ONE DISTANCE.";
   const note1 = locationData?.noteBottom1 || "Wait for you to come to me...";
   const note2 = locationData?.noteBottom2 || "...but I'm always coming to you if you need me.";
