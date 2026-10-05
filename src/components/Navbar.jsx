@@ -10,10 +10,9 @@ export default function Navbar() {
   const herName = localStorage.getItem('her_name') || user?.name || '';
 
   const navLinks = [
-    { label: 'Our Story', href: '#hero', icon: Heart },
+    { label: 'Story', href: '#hero', icon: Heart },
     { label: 'Memories', href: '#memories', icon: BookOpen },
     { label: 'Letter', href: '#letter', icon: BookOpen },
-    { label: 'Us', href: '#timeline', icon: Clock },
     { label: 'Distance', href: '#locations', icon: MapPin },
   ];
 

@@ -291,77 +291,7 @@ export default function Home() {
       {/* 4. INTERACTIVE LOVE LETTER */}
       <InteractiveEnvelope letterData={content?.letter} />
 
-      {/* 5. RELATIONSHIP TIMELINE */}
-      <section id="timeline" className="py-16 px-4 max-w-4xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-slate-900">
-            LOOK HOW FAR WE'VE COME ⏳
-          </h2>
-        </div>
 
-        <div className="relative border-l-4 border-[#ff2a75]/30 ml-4 md:ml-32 space-y-12 pl-6 md:pl-10">
-          {((Array.isArray(timeline) && timeline.length > 0) ? timeline : [
-            {
-              title: "The Spark",
-              subtitle: "Where it all began",
-              date: "October 14, 2022",
-              description: "Our eyes met for the very first time, and instantly, standard conversations turned into hours of effortless connection.",            },
-            {
-              title: "Our First Late-Night Drive",
-              subtitle: "City lights & endless talk",
-              date: "February 14, 2023",
-              description: "Playing our favorite playlist on loop while driving nowhere in particular. Neither of us wanted the night to end.",
-            },
-            {
-              title: "The Unforgettable Trip",
-              subtitle: "By the ocean",
-              date: "August 20, 2023",
-              description: "Watching the sunrise over the waves, wrapped in a blanket, sharing quiet dreams for the future.",
-            }
-          ]).map((evt, idx) => (
-            <motion.div
-              key={evt._id || idx}
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-              className="relative"
-            >
-              <div className="absolute -left-[31px] md:-left-[47px] top-1.5 w-6 h-6 rounded-full bg-[#ff2a75] border-4 border-white shadow-md" />
-
-              <div className="glass-card rounded-3xl p-6 md:p-8 shadow-xl border border-white/80 space-y-3">
-                <div className="text-xs font-bold text-[#ff2a75] uppercase font-mono">
-                  {evt.date}
-                </div>
-                <h3 className="font-display text-2xl font-bold text-slate-900">
-                  {evt.title}
-                </h3>
-                {evt.subtitle && (
-                  <div className="text-sm font-semibold text-[#80003c]">
-                    {evt.subtitle}
-                  </div>
-                )}
-                <p className="text-sm md:text-base text-slate-600 font-medium">
-                  {evt.description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
-
-          <div className="relative pt-6">
-            <div className="absolute -left-[31px] md:-left-[47px] top-8 w-6 h-6 rounded-full bg-[#80003c] border-4 border-white shadow-md" />
-            <div className="bg-gradient-to-r from-[#ff2a75] to-[#80003c] rounded-3xl p-8 text-white shadow-2xl text-center space-y-3">
-              <h4 className="font-display text-2xl md:text-3xl font-extrabold">
-                "And somehow, after everything..."
-              </h4>
-              <p className="font-handwritten text-4xl text-[#ffd0e0] font-bold">
-                "Here we are."
-              </p>
-            </div>
-          </div>
-
-        </div>
-      </section>
 
       {/* 6. TWO LOCATIONS SECTION */}
       <DistanceMap locationData={locations} />
