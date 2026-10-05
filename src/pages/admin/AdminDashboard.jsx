@@ -34,17 +34,28 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeleteEntry = async (id) => {
+  const handleDeleteLogin = async (id) => {
     try {
-      await api.deleteAnalyticsEntry(id);
+      await api.deleteLoginEntry(id);
       setData(prev => ({
         ...prev,
         totalSessions: Math.max(0, (prev?.totalSessions || 0) - 1),
-        userLogins: (prev?.userLogins || []).filter(i => i._id !== id),
+        userLogins: (prev?.userLogins || []).filter(i => i._id !== id)
+      }));
+    } catch (err) {
+      alert("Failed to delete sign-in entry: " + err.message);
+    }
+  };
+
+  const handleDeleteMessage = async (id) => {
+    try {
+      await api.deleteMessageEntry(id);
+      setData(prev => ({
+        ...prev,
         responseMessages: (prev?.responseMessages || []).filter(i => i._id !== id)
       }));
     } catch (err) {
-      alert("Failed to delete entry: " + err.message);
+      alert("Failed to delete message entry: " + err.message);
     }
   };
 
@@ -170,7 +181,7 @@ export default function AdminDashboard() {
 
                     {msg._id && (
                       <button
-                        onClick={() => handleDeleteEntry(msg._id)}
+                        onClick={() => handleDeleteMessage(msg._id)}
                         title="Delete Message"
                         className="p-1.5 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                       >
@@ -229,7 +240,7 @@ export default function AdminDashboard() {
 
                   {item._id && (
                     <button
-                      onClick={() => handleDeleteEntry(item._id)}
+                      onClick={() => handleDeleteLogin(item._id)}
                       title="Delete Sign-in Record"
                       className="p-1.5 rounded-full text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                     >

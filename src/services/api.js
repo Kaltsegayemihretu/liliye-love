@@ -101,6 +101,8 @@ export const api = {
   },
   getDashboardAnalytics: () => fetchApi('/analytics/dashboard'),
   clearDashboardAnalytics: () => fetchApi('/analytics/clear', { method: 'DELETE' }),
+  deleteLoginEntry: (id) => fetchApi(`/analytics/login/${id}`, { method: 'DELETE' }),
+  deleteMessageEntry: (id) => fetchApi(`/analytics/message/${id}`, { method: 'DELETE' }),
   deleteAnalyticsEntry: (id) => fetchApi(`/analytics/entry/${id}`, { method: 'DELETE' }),
   getNotifications: () => fetchApi('/notifications'),
   markAllNotificationsRead: () => fetchApi('/notifications/read-all', { method: 'PUT' })

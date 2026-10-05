@@ -607,7 +607,35 @@ app.delete('/api/analytics/clear', requireAdmin, async (req, res) => {
   }
 });
 
-// Delete specific sign-in or message entry by ID
+// Delete specific sign-in log entry
+app.delete('/api/analytics/login/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await AnalyticsEvent.findByIdAndDelete(id).catch(() => {});
+    await Notification.findByIdAndDelete(id).catch(() => {});
+
+    inMemoryStore.userLogins = inMemoryStore.userLogins.filter(i => i._id !== id);
+    return res.json({ success: true, id });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to delete sign-in log entry.' });
+  }
+});
+
+// Delete specific message entry
+app.delete('/api/analytics/message/:id', requireAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    await AnalyticsEvent.findByIdAndDelete(id).catch(() => {});
+    await Notification.findByIdAndDelete(id).catch(() => {});
+
+    inMemoryStore.responseMessages = inMemoryStore.responseMessages.filter(i => i._id !== id);
+    return res.json({ success: true, id });
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to delete message entry.' });
+  }
+});
+
+// Delete specific sign-in or message entry by ID (generic fallback)
 app.delete('/api/analytics/entry/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
