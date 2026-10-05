@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Heart, Sparkles, Clock, ArrowDown, Play, Video, Film, CheckCircle2 } from 'lucide-react';
+import { Heart, Sparkles, Clock, Film, CheckCircle2 } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { api } from '../services/api';
 
@@ -40,14 +40,14 @@ export default function Home() {
           api.getLocations()
         ]);
 
-        setContent(cData);
-        setPhotos(pData);
-        setVideos(vData);
-        setTimeline(tData);
-        setSongs(sData);
-        setLocations(lData);
+        if (cData && typeof cData === 'object') setContent(cData);
+        if (Array.isArray(pData)) setPhotos(pData);
+        if (Array.isArray(vData)) setVideos(vData);
+        if (Array.isArray(tData)) setTimeline(tData);
+        if (Array.isArray(sData)) setSongs(sData);
+        if (lData && typeof lData === 'object') setLocations(lData);
       } catch (err) {
-        console.warn('Using default content fallback:', err.message);
+        console.warn('Using default content fallback:', err?.message || err);
       }
     };
 
@@ -120,8 +120,9 @@ export default function Home() {
     confirmedText: "I'll take that as your answer."
   };
 
-  const heroPhotos = photos.filter(p => p.category === 'hero').slice(0, 4);
-  const albumPhotos = photos.filter(p => p.category === 'album' || !p.category);
+  const safePhotos = Array.isArray(photos) ? photos : [];
+  const heroPhotos = safePhotos.filter(p => p && p.category === 'hero').slice(0, 4);
+  const albumPhotos = safePhotos.filter(p => p && (p.category === 'album' || !p.category));
 
   return (
     <div className="min-h-screen bg-[#fff0f5] text-slate-800 relative overflow-x-hidden">
@@ -231,7 +232,6 @@ export default function Home() {
               </motion.div>
             ))
           ) : (
-            // Default sample photo cards if database is seeding
             [
               { caption: "That day.", url: "https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?auto=format&fit=crop&w=600&q=80", rot: -4 },
               { caption: "Us.", url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80", rot: 3 },
@@ -275,7 +275,6 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Video Container */}
           <div className="relative rounded-3xl overflow-hidden bg-slate-950 shadow-xl aspect-video border-4 border-white">
             <video
               src={videos[0]?.videoUrl || "https://assets.mixkit.co/videos/preview/mixkit-couple-walking-hand-in-hand-on-the-beach-41548-large.mp4"}
@@ -292,7 +291,7 @@ export default function Home() {
       <InteractiveEnvelope letterData={content?.letter} />
 
       {/* 6. BOOMBOX & SOUNDTRACK */}
-      <PinkBoombox songs={songs} />
+      <PinkBoombox songs={Array.isArray(songs) ? songs : []} />
 
       {/* 7. RELATIONSHIP TIMELINE */}
       <section id="timeline" className="py-16 px-4 max-w-4xl mx-auto">
@@ -306,9 +305,8 @@ export default function Home() {
           </h2>
         </div>
 
-        {/* Vertical Timeline Container */}
         <div className="relative border-l-4 border-[#ff2a75]/30 ml-4 md:ml-32 space-y-12 pl-6 md:pl-10">
-          {(timeline.length > 0 ? timeline : [
+          {((Array.isArray(timeline) && timeline.length > 0) ? timeline : [
             {
               title: "The Spark",
               subtitle: "Where it all began",
@@ -339,7 +337,6 @@ export default function Home() {
               transition={{ duration: 0.5, delay: idx * 0.1 }}
               className="relative"
             >
-              {/* Timeline Pin Badge */}
               <div className="absolute -left-[31px] md:-left-[47px] top-1.5 w-6 h-6 rounded-full bg-[#ff2a75] border-4 border-white shadow-md flex items-center justify-center" />
 
               <div className="glass-card rounded-3xl p-6 md:p-8 shadow-xl border border-white/80 space-y-3">
@@ -371,7 +368,6 @@ export default function Home() {
             </motion.div>
           ))}
 
-          {/* Timeline Ending Node */}
           <div className="relative pt-6">
             <div className="absolute -left-[31px] md:-left-[47px] top-8 w-6 h-6 rounded-full bg-[#80003c] border-4 border-white shadow-md" />
             <div className="bg-gradient-to-r from-[#ff2a75] to-[#80003c] rounded-3xl p-8 text-white shadow-2xl text-center space-y-3">
@@ -394,20 +390,17 @@ export default function Home() {
       <section className="py-20 px-4 max-w-5xl mx-auto">
         <div className="bg-gradient-to-br from-[#ff2a75] via-[#e60067] to-[#80003c] rounded-[3.5rem] p-8 md:p-16 relative overflow-hidden shadow-2xl text-white border-4 border-white/30 text-center space-y-8">
           
-          {/* Background liquid blobs */}
           <div className="absolute -top-20 -left-20 w-80 h-80 bg-[#ffd0e0]/30 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#ffe4ec]/30 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Couple Photograph */}
           <div className="relative z-10 w-44 h-44 md:w-56 md:h-56 mx-auto rounded-full p-2 bg-white/20 backdrop-blur-md shadow-2xl border-4 border-white/60 overflow-hidden">
             <img
-              src={photos.find(p => p.category === 'final')?.imageUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80"}
+              src={safePhotos.find(p => p && p.category === 'final')?.imageUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80"}
               alt="Us Together"
               className="w-full h-full object-cover rounded-full"
             />
           </div>
 
-          {/* Final Text Sequence */}
           <div className="relative z-10 max-w-2xl mx-auto space-y-4">
             <h2 className="font-display text-3xl md:text-5xl font-extrabold tracking-tight">
               "{finalContent.line1}"
@@ -429,7 +422,6 @@ export default function Home() {
               </p>
             </div>
 
-            {/* Ticking Clock Icon */}
             <div className="pt-4 flex justify-center">
               <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center animate-spin" style={{ animationDuration: '20s' }}>
                 <Clock className="w-6 h-6 text-white" />

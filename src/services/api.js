@@ -12,23 +12,38 @@ export async function fetchApi(endpoint, options = {}) {
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers
-  });
+  try {
+    const response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers
+    });
 
-  const data = await response.json().catch(() => ({}));
+    const data = await response.json().catch(() => null);
 
-  if (!response.ok) {
-    throw new Error(data.error || `API Request failed with status ${response.status}`);
+    if (!response.ok) {
+      return null;
+    }
+
+    return data;
+  } catch (err) {
+    console.warn(`API Request warning for ${endpoint}:`, err.message);
+    return null;
   }
-
-  return data;
 }
 
 export const api = {
   // Auth
-  login: (credentials) => fetchApi('/auth/login', { method: 'POST', body: JSON.stringify(credentials) }),
+  login: async (credentials) => {
+    const token = localStorage.getItem('token');
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Login failed.');
+    return data;
+  },
   getMe: () => fetchApi('/auth/me'),
   logout: () => fetchApi('/auth/logout', { method: 'POST' }),
 
@@ -73,7 +88,7 @@ export const api = {
   trackEvent: (eventType, metadata = {}) => {
     const sessionId = localStorage.getItem('session_id') || 'sess_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('session_id', sessionId);
-    return fetchApi('/analytics/event', { method: 'POST', body: JSON.stringify({ eventType, sessionId, metadata }) }).catch(() => {});
+    return fetchApi('/analytics/event', { method: 'POST', body: JSON.stringify({ eventType, sessionId, metadata }) });
   },
   getDashboardAnalytics: () => fetchApi('/analytics/dashboard'),
 
