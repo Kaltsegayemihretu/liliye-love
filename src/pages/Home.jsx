@@ -145,7 +145,10 @@ export default function Home() {
       return p;
     })
     .slice(0, 4);
-  const albumPhotos = safePhotos.filter(p => p && (p.category === 'album' || !p.category)).slice(0, 3);
+  const albumPhotos = safePhotos
+    .filter(p => p && (p.category === 'album' || !p.category))
+    .filter(p => p.imageUrl && !p.imageUrl.includes('unsplash.com'))
+    .slice(0, 3);
 
   return (
     <div className="min-h-screen bg-[#fff0f5] text-slate-800 relative overflow-x-hidden">
