@@ -168,11 +168,6 @@ export default function Home() {
           {/* Main Hero Content */}
           <div className="relative z-10 max-w-2xl mx-auto space-y-6 flex flex-col items-center">
             
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs font-bold uppercase tracking-widest text-white">
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              A PRIVATE DIGITAL LOVE STORY
-            </div>
-
             <h1 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.15] text-white drop-shadow-md">
               {heroContent.mainTitle}
             </h1>
@@ -208,10 +203,6 @@ export default function Home() {
       {/* 3. MEMORIES ALBUM SECTION */}
       <section id="memories" className="py-16 px-4 max-w-5xl mx-auto">
         <div className="text-center mb-12">
-          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#ffe4ec] text-[#ff2a75] text-xs font-extrabold uppercase tracking-wider mb-2">
-            <Heart className="w-3.5 h-3.5" />
-            THE MOMENTS
-          </span>
           <h2 className="font-display text-3xl md:text-4xl font-extrabold text-slate-900">
             Moments I Hold Close To My Heart 📸
           </h2>
@@ -269,10 +260,6 @@ export default function Home() {
       {/* 5. RELATIONSHIP TIMELINE */}
       <section id="timeline" className="py-16 px-4 max-w-4xl mx-auto">
         <div className="text-center mb-12">
-          <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#ffe4ec] text-[#ff2a75] text-xs font-extrabold uppercase tracking-wider mb-2">
-            <Clock className="w-3.5 h-3.5" />
-            OUR STORY
-          </span>
           <h2 className="font-display text-3xl md:text-4xl font-extrabold text-slate-900">
             LOOK HOW FAR WE'VE COME ⏳
           </h2>
@@ -323,16 +310,6 @@ export default function Home() {
                 <p className="text-sm md:text-base text-slate-600 font-medium">
                   {evt.description}
                 </p>
-
-                {evt.imageUrl && (
-                  <div className="pt-2">
-                    <img
-                      src={evt.imageUrl}
-                      alt={evt.title}
-                      className="w-full max-h-60 object-cover rounded-2xl border border-white/60"
-                    />
-                  </div>
-                )}
               </div>
             </motion.div>
           ))}
@@ -361,15 +338,6 @@ export default function Home() {
           
           <div className="absolute -top-20 -left-20 w-80 h-80 bg-[#ffd0e0]/30 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#ffe4ec]/30 rounded-full blur-3xl pointer-events-none" />
-
-          {/* Photograph */}
-          <div className="relative z-10 w-40 h-40 md:w-48 md:h-48 mx-auto rounded-full p-2 bg-white/20 backdrop-blur-md shadow-2xl border-4 border-white/60 overflow-hidden">
-            <img
-              src={safePhotos.find(p => p && p.category === 'final')?.imageUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80"}
-              alt="Us Together"
-              className="w-full h-full object-cover rounded-full"
-            />
-          </div>
 
           <div className="relative z-10 max-w-xl mx-auto space-y-3">
             <h2 className="font-display text-2xl md:text-4xl font-extrabold tracking-tight">
@@ -448,10 +416,7 @@ export default function Home() {
       </section>
 
       {/* FOOTER */}
-      <footer className="py-12 text-center text-slate-500 text-xs font-semibold tracking-wider">
-        <p className="opacity-70 hover:opacity-100 transition-opacity">
-          "Technically, I'm not contacting you."
-        </p>
+      <footer className="py-8 text-center text-slate-400 text-xs font-semibold">
       </footer>
 
       {/* HER NAME PROMPT MODAL ON FIRST VISIT */}
