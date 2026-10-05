@@ -229,8 +229,8 @@ export default function Home() {
           ) : (
             [
               { caption: "I Love You", url: "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing", rot: -4 },
-              { caption: "Us.", url: "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=600&q=80", rot: 3 },
-              { caption: "I still remember this.", url: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=600&q=80", rot: -5 },
+              { caption: "Us.", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: 3 },
+              { caption: "I still remember this.", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: -5 },
               { caption: "One of my favorite memories.", url: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?auto=format&fit=crop&w=600&q=80", rot: 4 },
               { caption: "You made this moment special.", url: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80", rot: -3 },
               { caption: "Some moments never really leave you.", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80", rot: 2 }
