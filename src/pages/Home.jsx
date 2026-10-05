@@ -149,6 +149,12 @@ export default function Home() {
   const albumPhotos = safePhotos
     .filter(p => p && (p.category === 'album' || !p.category))
     .filter(p => p.imageUrl && !p.imageUrl.includes('unsplash.com'))
+    .map(p => {
+      if (p.imageUrl && p.imageUrl.includes('1Ed4PxbKSH2gTTmCU1XCE6ln3S_GtlP6x')) {
+        return { ...p, imageUrl: "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing" };
+      }
+      return p;
+    })
     .slice(0, 3);
 
   return (
@@ -266,7 +272,7 @@ export default function Home() {
             ))
           ) : (
             [
-              { caption: "", url: "https://drive.google.com/file/d/1Ed4PxbKSH2gTTmCU1XCE6ln3S_GtlP6x/view?usp=drive_link", rot: -4 },
+              { caption: "", url: "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing", rot: -4 },
               { caption: "", url: "https://drive.google.com/file/d/1Xag3ljr61LxjeUc0UgDQpYJNvl3SMB-T/view?usp=sharing", rot: 3 },
               { caption: "", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: -5 }
             ].map((item, idx) => (

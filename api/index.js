@@ -420,7 +420,7 @@ app.get('/api/photos', async (req, res) => {
     },
     {
       _id: 'p3',
-      imageUrl: "https://drive.google.com/file/d/1Ed4PxbKSH2gTTmCU1XCE6ln3S_GtlP6x/view?usp=drive_link",
+      imageUrl: "https://drive.google.com/file/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4/view?usp=sharing",
       caption: "",
       rotation: -4,
       category: 'album'

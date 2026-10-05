@@ -2,18 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { formatImageUrl, getFallbackDriveUrl } from '../utils/image';
 
+const GUARANTEED_FALLBACK = 'https://lh3.googleusercontent.com/d/1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4';
+
 export default function CutoutSticker({ imageUrl, caption, rotation = 0, className = '', onClick }) {
-  const safeUrl = formatImageUrl(imageUrl);
-  const [imgSrc, setImgSrc] = useState(safeUrl);
+  const getInitialUrl = (url) => {
+    if (url && url.includes('1Ed4PxbKSH2gTTmCU1XCE6ln3S_GtlP6x')) {
+      return GUARANTEED_FALLBACK;
+    }
+    return formatImageUrl(url);
+  };
+
+  const [imgSrc, setImgSrc] = useState(() => getInitialUrl(imageUrl));
 
   useEffect(() => {
-    setImgSrc(formatImageUrl(imageUrl));
+    setImgSrc(getInitialUrl(imageUrl));
   }, [imageUrl]);
 
   const handleImageError = () => {
     const fallback = getFallbackDriveUrl(imageUrl);
-    if (imgSrc !== fallback) {
+    if (imgSrc !== fallback && !imgSrc.includes('1Ywnng1aKcnsroblkhBBhB6O4aW19j3n4')) {
       setImgSrc(fallback);
+    } else {
+      setImgSrc(GUARANTEED_FALLBACK);
     }
   };
 
