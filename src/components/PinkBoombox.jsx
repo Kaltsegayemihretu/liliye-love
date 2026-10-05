@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Disc, Play, Pause, Music, Radio, Volume2, Sparkles, X } from 'lucide-react';
+import { Disc, Play, Pause, Music, Radio, Volume2 } from 'lucide-react';
 import { useAudio } from '../context/AudioContext';
 import { api } from '../services/api';
 
@@ -11,8 +11,7 @@ export default function PinkBoombox({ songs = [] }) {
     closeBoombox,
     currentSong,
     playlistPlaying,
-    playSong,
-    togglePlaylistPlay
+    playSong
   } = useAudio();
 
   const handleToggleBoombox = () => {
@@ -65,7 +64,7 @@ export default function PinkBoombox({ songs = [] }) {
     }
   ];
 
-  const playlist = songs.length > 0 ? songs : defaultSongs;
+  const playlist = (Array.isArray(songs) && songs.length > 0) ? songs : defaultSongs;
 
   return (
     <div id="music" className="w-full max-w-4xl mx-auto my-20 px-4 flex flex-col items-center">
@@ -118,7 +117,7 @@ export default function PinkBoombox({ songs = [] }) {
             {/* Main Interactive Open/Close Button */}
             <button
               onClick={handleToggleBoombox}
-              className="w-full py-3.5 px-6 rounded-full bg-white text-[#ff2a75] hover:bg-[#ffe4ec] font-extrabold text-sm md:text-base shadow-xl transition-all flex items-center justify-center gap-2 group"
+              className="w-full py-3.5 px-6 rounded-full bg-white text-[#ff2a75] hover:bg-[#ffe4ec] font-extrabold text-sm md:text-base shadow-xl transition-all flex items-center justify-center gap-2 group cursor-pointer"
             >
               <Disc className={`w-5 h-5 text-[#ff2a75] ${boomboxActive ? 'animate-spin' : ''}`} />
               {boomboxActive ? 'Tap to close' : 'Tap to open'}
