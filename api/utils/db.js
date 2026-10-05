@@ -7,7 +7,12 @@ if (!cached) {
 }
 
 export async function connectToDatabase() {
-  const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/liliye_db';
+  const MONGODB_URI = process.env.MONGODB_URI;
+
+  if (!MONGODB_URI) {
+    console.warn('⚠️ MONGODB_URI is not defined in environment variables.');
+    return null;
+  }
 
   if (cached.conn) {
     return cached.conn;
@@ -16,12 +21,15 @@ export async function connectToDatabase() {
   if (!cached.promise) {
     const opts = {
       bufferCommands: false,
+      serverSelectionTimeoutMS: 5000
     };
 
-    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
-      return mongoose;
+    cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongooseInstance) => {
+      console.log('✅ Connected to MongoDB Atlas successfully.');
+      return mongooseInstance;
     }).catch(err => {
-      console.warn('MongoDB Atlas connection failed or unavailable locally:', err.message);
+      console.warn('⚠️ MongoDB Atlas connection warning:', err.message);
+      cached.promise = null;
       return null;
     });
   }
@@ -30,7 +38,7 @@ export async function connectToDatabase() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
-    throw e;
+    return null;
   }
 
   return cached.conn;

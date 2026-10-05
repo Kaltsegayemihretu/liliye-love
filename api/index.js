@@ -35,14 +35,14 @@ app.use(cookieParser());
 // Database connection & Seeding middleware for Serverless
 app.use(async (req, res, next) => {
   try {
-    await connectToDatabase();
-    // Seed on first request if DB empty
-    await seedInitialData();
-    next();
+    const conn = await connectToDatabase();
+    if (conn) {
+      await seedInitialData();
+    }
   } catch (err) {
-    console.error('Database middleware error:', err);
-    next();
+    console.warn('Database connection warning:', err.message);
   }
+  next();
 });
 
 // ==========================================
@@ -70,12 +70,11 @@ app.post('/api/auth/login', async (req, res) => {
 
     const token = generateToken(user);
 
-    // Track analytics event
     await AnalyticsEvent.create({
       eventType: 'Login',
       userId: user._id,
       metadata: { role: user.role, email: user.email }
-    });
+    }).catch(() => {});
 
     if (user.role === 'her') {
       await Notification.create({
@@ -83,7 +82,7 @@ app.post('/api/auth/login', async (req, res) => {
         message: `${user.email} logged into the website.`,
         type: 'login',
         link: '/admin/messages'
-      });
+      }).catch(() => {});
     }
 
     res.cookie('token', token, {
@@ -135,7 +134,7 @@ app.get('/api/content', async (req, res) => {
     });
     return res.json(result);
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to fetch site content.' });
+    return res.json({});
   }
 });
 
@@ -165,7 +164,7 @@ app.get('/api/photos', async (req, res) => {
     const photos = await Photo.find().sort({ order: 1, createdAt: -1 });
     return res.json(photos);
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to fetch photos.' });
+    return res.json([]);
   }
 });
 
@@ -214,7 +213,7 @@ app.get('/api/videos', async (req, res) => {
     const videos = await Video.find().sort({ order: 1, createdAt: -1 });
     return res.json(videos);
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to fetch videos.' });
+    return res.json([]);
   }
 });
 
@@ -253,7 +252,7 @@ app.get('/api/timeline', async (req, res) => {
     const events = await TimelineEvent.find().sort({ order: 1, createdAt: 1 });
     return res.json(events);
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to fetch timeline events.' });
+    return res.json([]);
   }
 });
 
@@ -292,7 +291,7 @@ app.get('/api/music', async (req, res) => {
     const songs = await Song.find().sort({ order: 1 });
     return res.json(songs);
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to fetch soundtrack.' });
+    return res.json([]);
   }
 });
 
@@ -330,17 +329,23 @@ app.get('/api/locations', async (req, res) => {
   try {
     let loc = await Location.findOne();
     if (!loc) {
-      loc = await Location.create({
+      loc = {
         myLocationName: "MY PLACE",
         myCity: "San Francisco, CA",
         herLocationName: "HER PLACE",
         herCity: "New York, NY",
         distanceText: "2,572 miles"
-      });
+      };
     }
     return res.json(loc);
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to fetch location data.' });
+    return res.json({
+      myLocationName: "MY PLACE",
+      myCity: "San Francisco, CA",
+      herLocationName: "HER PLACE",
+      herCity: "New York, NY",
+      distanceText: "2,572 miles"
+    });
   }
 });
 
@@ -366,15 +371,14 @@ app.get('/api/messages', requireAuth, async (req, res) => {
   try {
     const messages = await Message.find().sort({ createdAt: 1 });
     
-    // Mark messages as read if recipient is current user
     await Message.updateMany(
       { recipientId: req.user._id, read: false },
       { read: true, readAt: new Date() }
-    );
+    ).catch(() => {});
 
     return res.json(messages);
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to fetch messages.' });
+    return res.json([]);
   }
 });
 
@@ -401,12 +405,10 @@ app.post('/api/messages', requireAuth, async (req, res) => {
       read: false
     });
 
-    // Notify recipient via transactional email
     const appUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     const chatLink = `${appUrl}/chat`;
 
     if (sender.role === 'admin') {
-      // Send email to Her
       sendEmail({
         to: recipient.email,
         subject: "You have a new message 💖",
@@ -419,7 +421,6 @@ app.post('/api/messages', requireAuth, async (req, res) => {
         })
       });
     } else {
-      // Send email to Admin
       const adminEmail = process.env.ADMIN_EMAIL || recipient.email;
       sendEmail({
         to: adminEmail,
@@ -433,13 +434,12 @@ app.post('/api/messages', requireAuth, async (req, res) => {
         })
       });
 
-      // Add Admin Notification
       await Notification.create({
         title: "New Message from Her 💬",
         message: content.length > 60 ? content.substring(0, 60) + '...' : content,
         type: 'chat',
         link: '/admin/messages'
-      });
+      }).catch(() => {});
     }
 
     return res.status(201).json(message);
@@ -470,12 +470,11 @@ app.post('/api/analytics/session', async (req, res) => {
         lastActive: new Date()
       });
 
-      // Track website opened event
       await AnalyticsEvent.create({
         eventType: 'Website opened',
         sessionId,
         metadata: { deviceType, browser }
-      });
+      }).catch(() => {});
     } else {
       session.lastActive = new Date();
       await session.save();
@@ -483,7 +482,7 @@ app.post('/api/analytics/session', async (req, res) => {
 
     return res.json(session);
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to record session.' });
+    return res.json({ success: true });
   }
 });
 
@@ -501,7 +500,7 @@ app.post('/api/analytics/event', async (req, res) => {
 
     return res.status(201).json(event);
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to track event.' });
+    return res.json({ success: true });
   }
 });
 
@@ -512,7 +511,6 @@ app.get('/api/analytics/dashboard', requireAdmin, async (req, res) => {
     const unreadMessagesCount = await Message.countDocuments({ senderRole: 'her', read: false });
     const events = await AnalyticsEvent.find().sort({ timestamp: -1 }).limit(50);
     
-    // Aggregation counts for specific key events
     const envelopeOpens = await AnalyticsEvent.countDocuments({ eventType: 'Envelope opened' });
     const boomboxOpens = await AnalyticsEvent.countDocuments({ eventType: 'Boombox opened' });
     const finalClicks = await AnalyticsEvent.countDocuments({ eventType: 'Final button clicked' });
@@ -539,7 +537,7 @@ app.get('/api/notifications', requireAdmin, async (req, res) => {
     const notifications = await Notification.find().sort({ createdAt: -1 }).limit(30);
     return res.json(notifications);
   } catch (err) {
-    return res.status(500).json({ error: 'Failed to fetch notifications.' });
+    return res.json([]);
   }
 });
 
@@ -568,22 +566,19 @@ app.post('/api/events/final-button', async (req, res) => {
   try {
     const { sessionId } = req.body;
 
-    // Record Analytics Event
     await AnalyticsEvent.create({
       eventType: 'Final button clicked',
       sessionId: sessionId || '',
       timestamp: new Date()
-    });
+    }).catch(() => {});
 
-    // Create Admin Notification
-    const notif = await Notification.create({
+    await Notification.create({
       title: '🚨 HER CLICKED THE FINAL RED BUTTON! 💖',
       message: 'She clicked "CLICK WHEN YOU\'RE READY FOR US". She is ready!',
       type: 'final_button',
       link: '/admin/overview'
-    });
+    }).catch(() => {});
 
-    // Optionally send email notification to Admin email
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@liliye.love';
     sendEmail({
       to: adminEmail,
@@ -609,7 +604,7 @@ app.post('/api/events/final-button', async (req, res) => {
 
 // Standalone local server listener
 const PORT = process.env.PORT || 5000;
-if (process.env.NODE_ENV !== 'production') {
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`🚀 Liliye API Server running on http://localhost:${PORT}`);
   });
