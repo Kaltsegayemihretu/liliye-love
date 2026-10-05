@@ -1,50 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
-import { Heart, Sparkles, Clock, Film, CheckCircle2 } from 'lucide-react';
-import { useAudio } from '../context/AudioContext';
+import { Heart, Sparkles, Clock, Send, CheckCircle2, User } from 'lucide-react';
 import { api } from '../services/api';
 
 import Navbar from '../components/Navbar';
-import AudioPlayerWidget from '../components/AudioPlayerWidget';
 import CutoutSticker from '../components/CutoutSticker';
 import WatchClockAnimation from '../components/WatchClockAnimation';
 import InteractiveEnvelope from '../components/InteractiveEnvelope';
-import PinkBoombox from '../components/PinkBoombox';
 import DistanceMap from '../components/DistanceMap';
 
 export default function Home() {
-  const { startBackgroundMusic } = useAudio();
-  
   const [content, setContent] = useState(null);
   const [photos, setPhotos] = useState([]);
-  const [videos, setVideos] = useState([]);
   const [timeline, setTimeline] = useState([]);
-  const [songs, setSongs] = useState([]);
   const [locations, setLocations] = useState(null);
   
   const [selectedImage, setSelectedImage] = useState(null);
-  const [finalClicked, setFinalClicked] = useState(false);
-  const [finalLoading, setFinalLoading] = useState(false);
 
-  // Fetch public dynamic site content
+  // Name login prompt modal on first visit
+  const [herName, setHerName] = useState(() => localStorage.getItem('her_name') || '');
+  const [showNameModal, setShowNameModal] = useState(false);
+  const [inputName, setInputName] = useState('');
+
+  // End-of-page message state
+  const [responseMsg, setResponseMsg] = useState('');
+  const [msgSubmitted, setMsgSubmitted] = useState(false);
+  const [msgLoading, setMsgLoading] = useState(false);
+
   useEffect(() => {
+    // Show name prompt on initial visit if name not entered yet
+    if (!localStorage.getItem('her_name')) {
+      setShowNameModal(true);
+    }
+
     const loadData = async () => {
       try {
-        const [cData, pData, vData, tData, sData, lData] = await Promise.all([
+        const [cData, pData, tData, lData] = await Promise.all([
           api.getContent(),
           api.getPhotos(),
-          api.getVideos(),
           api.getTimeline(),
-          api.getMusic(),
           api.getLocations()
         ]);
 
         if (cData && typeof cData === 'object') setContent(cData);
         if (Array.isArray(pData)) setPhotos(pData);
-        if (Array.isArray(vData)) setVideos(vData);
         if (Array.isArray(tData)) setTimeline(tData);
-        if (Array.isArray(sData)) setSongs(sData);
         if (lData && typeof lData === 'object') setLocations(lData);
       } catch (err) {
         console.warn('Using default content fallback:', err?.message || err);
@@ -53,46 +54,57 @@ export default function Home() {
 
     loadData();
 
-    // Register analytics visitor session
     const sessionId = localStorage.getItem('session_id') || 'sess_' + Math.random().toString(36).substr(2, 9);
     localStorage.setItem('session_id', sessionId);
-    
     api.registerSession({
       sessionId,
       deviceType: window.innerWidth < 768 ? 'Mobile' : 'Desktop',
-      browser: navigator.userAgent.includes('Chrome') ? 'Chrome' : 'Browser',
+      browser: 'Browser',
       region: Intl.DateTimeFormat().resolvedOptions().timeZone
     });
   }, []);
 
-  const handleBeginClick = () => {
-    startBackgroundMusic();
-    api.trackEvent('Begin clicked');
-    const memoriesSection = document.getElementById('watch-motif');
-    if (memoriesSection) {
-      memoriesSection.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
-  const handleFinalButtonClick = async () => {
-    if (finalClicked || finalLoading) return;
-    setFinalLoading(true);
+  const handleNameSubmit = async (e) => {
+    e.preventDefault();
+    if (!inputName.trim()) return;
+    const clean = inputName.trim();
+    setHerName(clean);
+    localStorage.setItem('her_name', clean);
+    setShowNameModal(false);
 
     try {
-      await api.clickFinalButton();
-      setFinalClicked(true);
+      await api.nameLogin(clean);
+    } catch (err) {}
+  };
+
+  const handleBeginClick = () => {
+    api.trackEvent('Begin clicked');
+    const watchSec = document.getElementById('watch-motif');
+    if (watchSec) watchSec.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const handleResponseSubmit = async (e) => {
+    e.preventDefault();
+    if (!responseMsg.trim() || msgLoading || msgSubmitted) return;
+
+    setMsgLoading(true);
+    try {
+      await api.sendResponseMessage(herName || 'Her', responseMsg.trim());
+      setMsgSubmitted(true);
 
       // Trigger celebratory romantic heart confetti burst
-      confetti({
-        particleCount: 120,
-        spread: 80,
-        origin: { y: 0.8 },
-        colors: ['#ff2a75', '#e60067', '#ffd0e0', '#ffffff', '#80003c']
-      });
+      try {
+        confetti({
+          particleCount: 100,
+          spread: 70,
+          origin: { y: 0.8 },
+          colors: ['#ff2a75', '#e60067', '#ffd0e0', '#ffffff', '#80003c']
+        });
+      } catch (e) {}
     } catch (err) {
-      console.error('Final button error:', err);
+      alert('Failed to send message: ' + err.message);
     } finally {
-      setFinalLoading(false);
+      setMsgLoading(false);
     }
   };
 
@@ -104,7 +116,6 @@ export default function Home() {
   };
 
   const watchContent = content?.watch || {
-    title: "UNTIL THE END OF TIME",
     quoteText: "This watch will help you keep time until we find our way back to each other.",
     subText: "Every second ticks as a gentle reminder of the moments we've shared and the ones still waiting for us."
   };
@@ -115,9 +126,7 @@ export default function Home() {
     highlight: "US.",
     pauseText: "Until then...",
     waitText: "I'll wait.",
-    endTimeText: "Till the end of time.",
-    buttonText: "CLICK WHEN YOU'RE READY FOR US",
-    confirmedText: "I'll take that as your answer."
+    endTimeText: "Till the end of time."
   };
 
   const safePhotos = Array.isArray(photos) ? photos : [];
@@ -127,21 +136,18 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-[#fff0f5] text-slate-800 relative overflow-x-hidden">
       
-      {/* Navigation & Audio Player Widget */}
       <Navbar />
-      <AudioPlayerWidget />
 
-      {/* 1. OPENING HERO SECTION */}
-      <section id="hero" className="pt-24 pb-16 px-4 max-w-6xl mx-auto min-h-[90vh] flex items-center justify-center">
+      {/* 1. MINIMAL HERO SECTION */}
+      <section id="hero" className="pt-24 pb-16 px-4 max-w-5xl mx-auto min-h-[85vh] flex items-center justify-center">
         <div className="w-full bg-gradient-to-br from-[#ff2a75] via-[#e60067] to-[#80003c] rounded-[3rem] p-8 md:p-16 relative overflow-hidden shadow-2xl text-white border-4 border-white/30 text-center">
           
           {/* Animated Liquid / Blob Shapes */}
           <div className="absolute top-10 left-10 w-72 h-72 bg-[#ffa8bc]/30 rounded-full blur-3xl animate-blob-1 pointer-events-none" />
           <div className="absolute bottom-10 right-10 w-80 h-80 bg-[#ffd0e0]/20 rounded-full blur-3xl animate-blob-2 pointer-events-none" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/10 rounded-full blur-3xl animate-blob-3 pointer-events-none" />
 
           {/* Cutout Sticker Photos floating around hero */}
-          <div className="hidden lg:block absolute top-12 left-12 w-44">
+          <div className="hidden lg:block absolute top-12 left-10 w-40">
             <CutoutSticker
               imageUrl={heroPhotos[0]?.imageUrl || "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=400&q=80"}
               caption="That day."
@@ -150,7 +156,7 @@ export default function Home() {
             />
           </div>
 
-          <div className="hidden lg:block absolute top-16 right-12 w-44">
+          <div className="hidden lg:block absolute top-16 right-10 w-40">
             <CutoutSticker
               imageUrl={heroPhotos[1]?.imageUrl || "https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80"}
               caption="Us."
@@ -160,34 +166,33 @@ export default function Home() {
           </div>
 
           {/* Main Hero Content */}
-          <div className="relative z-10 max-w-3xl mx-auto space-y-6 flex flex-col items-center">
+          <div className="relative z-10 max-w-2xl mx-auto space-y-6 flex flex-col items-center">
             
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/20 backdrop-blur-md border border-white/30 text-xs font-bold uppercase tracking-widest text-white">
               <Sparkles className="w-4 h-4 text-amber-300" />
               A PRIVATE DIGITAL LOVE STORY
             </div>
 
-            <h1 className="font-display text-4xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.15] text-white drop-shadow-md">
+            <h1 className="font-display text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.15] text-white drop-shadow-md">
               {heroContent.mainTitle}
             </h1>
 
-            <div className="space-y-2 text-lg md:text-2xl font-medium text-white/95 max-w-xl">
+            <div className="space-y-2 text-lg md:text-2xl font-medium text-white/95">
               <p>"{heroContent.subTitle1}"</p>
               <p className="font-handwritten text-3xl md:text-4xl text-[#ffd0e0] font-bold">
                 "{heroContent.subTitle2}"
               </p>
             </div>
 
-            {/* BEGIN Button */}
-            <div className="pt-6">
+            <div className="pt-4">
               <motion.button
                 onClick={handleBeginClick}
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-10 py-4 rounded-full bg-white text-[#ff2a75] font-display font-extrabold text-xl shadow-2xl hover:bg-[#ffe4ec] transition-all border-2 border-white flex items-center gap-3 group cursor-pointer"
+                className="px-10 py-4 rounded-full bg-white text-[#ff2a75] font-display font-extrabold text-lg shadow-2xl hover:bg-[#ffe4ec] transition-all border-2 border-white flex items-center gap-3 cursor-pointer"
               >
                 <span>{heroContent.buttonText}</span>
-                <Heart className="w-5 h-5 fill-[#ff2a75] group-hover:scale-125 transition-transform" />
+                <Heart className="w-5 h-5 fill-[#ff2a75]" />
               </motion.button>
             </div>
 
@@ -201,18 +206,17 @@ export default function Home() {
       </section>
 
       {/* 3. MEMORIES ALBUM SECTION */}
-      <section id="memories" className="py-16 px-4 max-w-6xl mx-auto">
+      <section id="memories" className="py-16 px-4 max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#ffe4ec] text-[#ff2a75] text-xs font-extrabold uppercase tracking-wider mb-2">
             <Heart className="w-3.5 h-3.5" />
             THE MOMENTS
           </span>
-          <h2 className="font-display text-3xl md:text-5xl font-extrabold text-slate-900">
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-slate-900">
             Moments I Hold Close To My Heart 📸
           </h2>
         </div>
 
-        {/* Floating Scrapbook Photo Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 items-center">
           {albumPhotos.length > 0 ? (
             albumPhotos.map((photo, idx) => (
@@ -259,48 +263,17 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. VIDEO MEMORY SECTION */}
-      <section className="py-16 px-4 max-w-4xl mx-auto">
-        <div className="glass-card rounded-[2.5rem] p-8 md:p-12 border border-white/80 shadow-2xl text-center">
-          <div className="mb-6">
-            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#ffe4ec] text-[#ff2a75] text-xs font-extrabold uppercase tracking-wider mb-2">
-              <Film className="w-3.5 h-3.5" />
-              DIGITAL SCRAPBOOK VIDEO
-            </span>
-            <h3 className="font-display text-2xl md:text-4xl font-extrabold text-slate-900">
-              "{videos[0]?.title || 'A few moments I wish I could live again.'}"
-            </h3>
-            <p className="text-sm md:text-base text-slate-600 font-medium mt-2">
-              "{videos[0]?.subtitle || "And there are still so many moments I'd like to make with you."}"
-            </p>
-          </div>
-
-          <div className="relative rounded-3xl overflow-hidden bg-slate-950 shadow-xl aspect-video border-4 border-white">
-            <video
-              src={videos[0]?.videoUrl || "https://assets.mixkit.co/videos/preview/mixkit-couple-walking-hand-in-hand-on-the-beach-41548-large.mp4"}
-              controls
-              poster={videos[0]?.thumbnailUrl || "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=800&q=80"}
-              className="w-full h-full object-cover"
-              onPlay={() => api.trackEvent('Video played')}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* 5. INTERACTIVE LOVE LETTER */}
+      {/* 4. INTERACTIVE LOVE LETTER */}
       <InteractiveEnvelope letterData={content?.letter} />
 
-      {/* 6. BOOMBOX & SOUNDTRACK */}
-      <PinkBoombox songs={Array.isArray(songs) ? songs : []} />
-
-      {/* 7. RELATIONSHIP TIMELINE */}
+      {/* 5. RELATIONSHIP TIMELINE */}
       <section id="timeline" className="py-16 px-4 max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#ffe4ec] text-[#ff2a75] text-xs font-extrabold uppercase tracking-wider mb-2">
             <Clock className="w-3.5 h-3.5" />
             OUR STORY
           </span>
-          <h2 className="font-display text-3xl md:text-5xl font-extrabold text-slate-900">
+          <h2 className="font-display text-3xl md:text-4xl font-extrabold text-slate-900">
             LOOK HOW FAR WE'VE COME ⏳
           </h2>
         </div>
@@ -337,10 +310,10 @@ export default function Home() {
               transition={{ duration: 0.5, delay: idx * 0.1 }}
               className="relative"
             >
-              <div className="absolute -left-[31px] md:-left-[47px] top-1.5 w-6 h-6 rounded-full bg-[#ff2a75] border-4 border-white shadow-md flex items-center justify-center" />
+              <div className="absolute -left-[31px] md:-left-[47px] top-1.5 w-6 h-6 rounded-full bg-[#ff2a75] border-4 border-white shadow-md" />
 
               <div className="glass-card rounded-3xl p-6 md:p-8 shadow-xl border border-white/80 space-y-3">
-                <div className="text-xs font-bold text-[#ff2a75] uppercase tracking-wider font-mono">
+                <div className="text-xs font-bold text-[#ff2a75] uppercase font-mono">
                   {evt.date}
                 </div>
                 <h3 className="font-display text-2xl font-bold text-slate-900">
@@ -383,17 +356,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 8. TWO LOCATIONS SECTION */}
+      {/* 6. TWO LOCATIONS SECTION */}
       <DistanceMap locationData={locations} />
 
-      {/* 9. FINAL SECTION */}
-      <section className="py-20 px-4 max-w-5xl mx-auto">
-        <div className="bg-gradient-to-br from-[#ff2a75] via-[#e60067] to-[#80003c] rounded-[3.5rem] p-8 md:p-16 relative overflow-hidden shadow-2xl text-white border-4 border-white/30 text-center space-y-8">
+      {/* 7. MINIMAL FINAL SECTION & HER PERSONAL REPLY FORM */}
+      <section className="py-20 px-4 max-w-4xl mx-auto">
+        <div className="bg-gradient-to-br from-[#ff2a75] via-[#e60067] to-[#80003c] rounded-[3.5rem] p-8 md:p-14 relative overflow-hidden shadow-2xl text-white border-4 border-white/30 text-center space-y-8">
           
           <div className="absolute -top-20 -left-20 w-80 h-80 bg-[#ffd0e0]/30 rounded-full blur-3xl pointer-events-none" />
           <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#ffe4ec]/30 rounded-full blur-3xl pointer-events-none" />
 
-          <div className="relative z-10 w-44 h-44 md:w-56 md:h-56 mx-auto rounded-full p-2 bg-white/20 backdrop-blur-md shadow-2xl border-4 border-white/60 overflow-hidden">
+          {/* Photograph */}
+          <div className="relative z-10 w-40 h-40 md:w-48 md:h-48 mx-auto rounded-full p-2 bg-white/20 backdrop-blur-md shadow-2xl border-4 border-white/60 overflow-hidden">
             <img
               src={safePhotos.find(p => p && p.category === 'final')?.imageUrl || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80"}
               alt="Us Together"
@@ -401,55 +375,75 @@ export default function Home() {
             />
           </div>
 
-          <div className="relative z-10 max-w-2xl mx-auto space-y-4">
-            <h2 className="font-display text-3xl md:text-5xl font-extrabold tracking-tight">
+          <div className="relative z-10 max-w-xl mx-auto space-y-3">
+            <h2 className="font-display text-2xl md:text-4xl font-extrabold tracking-tight">
               "{finalContent.line1}"
             </h2>
-            <p className="text-xl md:text-2xl font-semibold text-white/90">
+            <p className="text-lg md:text-xl font-semibold text-white/90">
               "{finalContent.line2}"
             </p>
-            <div className="font-display text-5xl md:text-7xl font-extrabold text-white tracking-widest py-2">
+            <div className="font-display text-4xl md:text-6xl font-extrabold text-white tracking-widest py-1">
               "{finalContent.highlight}"
             </div>
             
-            <div className="pt-4 space-y-2">
-              <p className="text-lg text-white/80 font-medium">{finalContent.pauseText}</p>
-              <p className="font-handwritten text-4xl text-[#ffd0e0] font-bold">
+            <div className="pt-2 space-y-1">
+              <p className="text-base text-white/80 font-medium">{finalContent.pauseText}</p>
+              <p className="font-handwritten text-3xl text-[#ffd0e0] font-bold">
                 "{finalContent.waitText}"
               </p>
-              <p className="font-display text-2xl font-bold tracking-wide">
+              <p className="font-display text-xl font-bold tracking-wide">
                 "{finalContent.endTimeText}"
               </p>
             </div>
-
-            <div className="pt-4 flex justify-center">
-              <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center animate-spin" style={{ animationDuration: '20s' }}>
-                <Clock className="w-6 h-6 text-white" />
-              </div>
-            </div>
           </div>
 
-          {/* 10. FINAL RED BUTTON */}
-          <div className="relative z-10 pt-10 border-t border-white/20">
-            {!finalClicked ? (
-              <motion.button
-                onClick={handleFinalButtonClick}
-                disabled={finalLoading}
-                whileHover={{ scale: 1.06 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full max-w-xl py-5 px-8 rounded-full bg-gradient-to-r from-red-600 via-rose-600 to-red-700 text-white font-display font-extrabold text-xl md:text-2xl shadow-2xl hover:shadow-red-500/50 transition-all border-4 border-white cursor-pointer animate-pulse-glow flex items-center justify-center gap-3 mx-auto"
-              >
-                <Heart className="w-7 h-7 fill-white animate-bounce" />
-                <span>{finalContent.buttonText}</span>
-              </motion.button>
+          {/* HER PERSONAL MESSAGE RESPONSE CARD */}
+          <div className="relative z-10 pt-8 border-t border-white/20 max-w-xl mx-auto">
+            {!msgSubmitted ? (
+              <form onSubmit={handleResponseSubmit} className="bg-white/95 backdrop-blur-md rounded-3xl p-6 shadow-2xl text-slate-900 text-left space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-display font-bold text-lg text-[#80003c] flex items-center gap-2">
+                    <Heart className="w-5 h-5 text-[#ff2a75] fill-[#ff2a75]" />
+                    Leave A Message For Me 💌
+                  </h3>
+                  {herName && (
+                    <span className="text-xs font-bold text-[#ff2a75] bg-[#ffe4ec] px-3 py-1 rounded-full">
+                      From: {herName}
+                    </span>
+                  )}
+                </div>
+
+                <textarea
+                  rows={3}
+                  required
+                  value={responseMsg}
+                  onChange={(e) => setResponseMsg(e.target.value)}
+                  placeholder="Write your personal thoughts or message here for me..."
+                  className="w-full p-3.5 rounded-2xl bg-slate-50 border border-[#ffd0e0] text-sm text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-[#ff2a75]"
+                />
+
+                <button
+                  type="submit"
+                  disabled={!responseMsg.trim() || msgLoading}
+                  className="w-full py-3.5 rounded-full bg-gradient-to-r from-[#ff2a75] to-[#e60067] text-white font-display font-extrabold text-sm shadow-md hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Send className="w-4 h-4" />
+                  <span>{msgLoading ? 'Sending...' : 'Send Message To Me 💖'}</span>
+                </button>
+              </form>
             ) : (
               <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
+                initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="bg-white text-slate-900 rounded-full py-6 px-10 max-w-xl mx-auto shadow-2xl font-display text-2xl font-extrabold flex items-center justify-center gap-3 border-4 border-[#ffd0e0]"
+                className="bg-white text-slate-900 rounded-3xl p-8 shadow-2xl text-center space-y-3 border-4 border-[#ffd0e0]"
               >
-                <CheckCircle2 className="w-8 h-8 text-[#ff2a75]" />
-                <span>{finalContent.confirmedText} ❤️</span>
+                <CheckCircle2 className="w-12 h-12 text-[#ff2a75] mx-auto" />
+                <h3 className="font-display text-2xl font-extrabold text-[#80003c]">
+                  Thank You, My Love ❤️
+                </h3>
+                <p className="text-sm font-semibold text-slate-700">
+                  Your message has been sent to me. I will keep it close to my heart.
+                </p>
               </motion.div>
             )}
           </div>
@@ -463,6 +457,53 @@ export default function Home() {
           "Technically, I'm not contacting you."
         </p>
       </footer>
+
+      {/* HER NAME PROMPT MODAL ON FIRST VISIT */}
+      <AnimatePresence>
+        {showNameModal && (
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-[2.5rem] p-8 md:p-10 max-w-md w-full shadow-2xl text-center border-4 border-[#ffd0e0] space-y-4"
+            >
+              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#ff2a75] to-[#e60067] text-white flex items-center justify-center shadow-lg border-4 border-white mx-auto">
+                <Heart className="w-8 h-8 fill-white animate-bounce" />
+              </div>
+
+              <h2 className="font-display text-3xl font-extrabold text-slate-900">
+                Welcome, My Love 💖
+              </h2>
+
+              <p className="text-xs text-slate-600 font-semibold">
+                Please enter your name to open our digital world.
+              </p>
+
+              <form onSubmit={handleNameSubmit} className="space-y-4 text-left pt-2">
+                <div>
+                  <input
+                    type="text"
+                    required
+                    autoFocus
+                    value={inputName}
+                    onChange={(e) => setInputName(e.target.value)}
+                    placeholder="Enter your name..."
+                    className="w-full p-4 rounded-2xl bg-slate-50 border border-[#ffd0e0] text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-[#ff2a75]"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-4 rounded-full bg-gradient-to-r from-[#ff2a75] to-[#e60067] text-white font-display font-extrabold text-base shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  Open Experience ✨
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Lightbox Modal for Photo viewing */}
       {selectedImage && (
