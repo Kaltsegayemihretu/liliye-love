@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Heart, Sparkles, Clock, Send, CheckCircle2, User } from 'lucide-react';
@@ -11,6 +12,7 @@ import InteractiveEnvelope from '../components/InteractiveEnvelope';
 import DistanceMap from '../components/DistanceMap';
 
 export default function Home() {
+  const navigate = useNavigate();
   const [content, setContent] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [timeline, setTimeline] = useState([]);
@@ -18,7 +20,7 @@ export default function Home() {
   
   const [selectedImage, setSelectedImage] = useState(null);
 
-  // Name login prompt modal on first visit
+  // Name login state
   const [herName, setHerName] = useState(() => localStorage.getItem('her_name') || '');
   const [showNameModal, setShowNameModal] = useState(false);
   const [inputName, setInputName] = useState('');
@@ -29,9 +31,10 @@ export default function Home() {
   const [msgLoading, setMsgLoading] = useState(false);
 
   useEffect(() => {
-    // Show name prompt on initial visit if name not entered yet
+    // If Her name has not been entered yet, prompt login page immediately
     if (!localStorage.getItem('her_name')) {
-      setShowNameModal(true);
+      navigate('/login');
+      return;
     }
 
     const loadData = async () => {
@@ -142,7 +145,7 @@ export default function Home() {
       return p;
     })
     .slice(0, 4);
-  const albumPhotos = safePhotos.filter(p => p && (p.category === 'album' || !p.category));
+  const albumPhotos = safePhotos.filter(p => p && (p.category === 'album' || !p.category)).slice(0, 3);
 
   return (
     <div className="min-h-screen bg-[#fff0f5] text-slate-800 relative overflow-x-hidden">
@@ -261,10 +264,7 @@ export default function Home() {
             [
               { caption: "", url: "https://drive.google.com/file/d/1Ed4PxbKSH2gTTmCU1XCE6ln3S_GtlP6x/view?usp=drive_link", rot: -4 },
               { caption: ".", url: "https://drive.google.com/file/d/1Xag3ljr61LxjeUc0UgDQpYJNvl3SMB-T/view?usp=sharing", rot: 3 },
-              { caption: "", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: -5 },
-              // { caption: "", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: 4 },
-              // { caption: "", url: "https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80", rot: -3 },
-              // { caption: "", url: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80", rot: 2 }
+              { caption: "", url: "https://drive.google.com/file/d/1R2Rw7lXW_nHePAQri6qqZuIqr1lCQ7_n/view?usp=sharing", rot: -5 }
             ].map((item, idx) => (
               <motion.div
                 key={idx}
