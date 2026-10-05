@@ -610,4 +610,9 @@ if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
   });
 }
 
-export default app;
+// Vercel Serverless Function Handler
+const handler = (req, res) => {
+  return app(req, res);
+};
+
+export default handler;
