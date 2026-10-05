@@ -25,12 +25,6 @@ export default function CutoutSticker({ imageUrl, caption, rotation = 0, classNa
         />
       </div>
 
-      {/* Caption if provided */}
-      {caption && (
-        <div className="pt-2 pb-1 text-center font-handwritten text-xl font-bold text-slate-800 tracking-wide">
-          {caption}
-        </div>
-      )}
     </motion.div>
   );
 }
