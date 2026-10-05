@@ -33,6 +33,7 @@ app.use(cookieParser());
 const inMemoryStore = {
   responseMessages: [],
   userLogins: [],
+  visitorSessions: new Map(),
   notifications: [
     {
       _id: 'notif_1',
@@ -539,13 +540,53 @@ app.put('/api/locations', requireAdmin, async (req, res) => {
 // ==========================================
 // 4. ADMIN DASHBOARD ANALYTICS ROUTE (Who Signed In & Messages Received)
 // ==========================================
-app.post('/api/analytics/session', async (req, res) => res.json({ success: true }));
+app.post('/api/analytics/session', async (req, res) => {
+  try {
+    const { sessionId, deviceType, browser, region } = req.body || {};
+    const now = new Date();
+
+    if (sessionId) {
+      inMemoryStore.visitorSessions.set(sessionId, {
+        sessionId,
+        deviceType: deviceType || 'Desktop',
+        browser: browser || 'Browser',
+        region: region || 'Unknown',
+        lastActive: now
+      });
+
+      // Save to MongoDB if connected
+      await VisitorSession.findOneAndUpdate(
+        { sessionId },
+        {
+          sessionId,
+          deviceType: deviceType || 'Desktop',
+          browser: browser || 'Browser',
+          region: region || 'Unknown',
+          lastActive: now
+        },
+        { upsert: true, new: true }
+      ).catch(() => {});
+
+      await AnalyticsEvent.create({
+        eventType: 'Website opened',
+        sessionId,
+        timestamp: now
+      }).catch(() => {});
+    }
+
+    return res.json({ success: true, totalVisits: inMemoryStore.visitorSessions.size });
+  } catch (err) {
+    return res.json({ success: true });
+  }
+});
+
 app.post('/api/analytics/event', async (req, res) => res.status(201).json({ success: true }));
 
 app.get('/api/analytics/dashboard', requireAdmin, async (req, res) => {
   try {
     let mongoLogins = [];
     let mongoResponses = [];
+    let mongoSessionsCount = 0;
 
     try {
       const loginEvents = await AnalyticsEvent.find({ eventType: 'Login' }).sort({ timestamp: -1 });
@@ -562,13 +603,16 @@ app.get('/api/analytics/dashboard', requireAdmin, async (req, res) => {
         message: e.metadata?.responseText || '',
         timestamp: e.timestamp || e.createdAt
       }));
+
+      mongoSessionsCount = await VisitorSession.countDocuments();
     } catch (e) {}
 
-    // Combine MongoDB and in-memory list without duplicates
+    // Combine MongoDB and in-memory list for logins without duplicates
     const combinedLoginsMap = new Map();
     inMemoryStore.userLogins.forEach(item => combinedLoginsMap.set(item._id, item));
     mongoLogins.forEach(item => combinedLoginsMap.set(item._id, item));
 
+    // Combine MongoDB and in-memory list for responses without duplicates
     const combinedResponsesMap = new Map();
     inMemoryStore.responseMessages.forEach(item => combinedResponsesMap.set(item._id, item));
     mongoResponses.forEach(item => combinedResponsesMap.set(item._id, item));
@@ -576,14 +620,18 @@ app.get('/api/analytics/dashboard', requireAdmin, async (req, res) => {
     const userLogins = Array.from(combinedLoginsMap.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     const responseMessages = Array.from(combinedResponsesMap.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+    // Total site visits: max of visitor sessions count, in-memory sessions, and login count
+    const totalVisits = Math.max(mongoSessionsCount, inMemoryStore.visitorSessions.size, userLogins.length);
+
     return res.json({
-      totalSessions: userLogins.length,
+      totalSessions: totalVisits,
       userLogins,
       responseMessages
     });
   } catch (err) {
+    const fallbackVisits = Math.max(inMemoryStore.visitorSessions.size, inMemoryStore.userLogins.length);
     return res.json({
-      totalSessions: inMemoryStore.userLogins.length,
+      totalSessions: fallbackVisits,
       userLogins: inMemoryStore.userLogins,
       responseMessages: inMemoryStore.responseMessages
     });
@@ -599,6 +647,7 @@ app.delete('/api/analytics/clear', requireAdmin, async (req, res) => {
 
     inMemoryStore.userLogins = [];
     inMemoryStore.responseMessages = [];
+    inMemoryStore.visitorSessions.clear();
     inMemoryStore.notifications = [];
 
     return res.json({ success: true, message: 'All analytics and overview data reset to 0.' });
