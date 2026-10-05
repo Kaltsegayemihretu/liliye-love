@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Image, Video, Plus, Trash2, Edit2, Upload, Check } from 'lucide-react';
 import { api } from '../../services/api';
+import { formatImageUrl } from '../../utils/image';
 
 export default function AdminMedia() {
   const [photos, setPhotos] = useState([]);
@@ -48,7 +49,11 @@ export default function AdminMedia() {
     if (!newPhoto.imageUrl) return alert('Please enter an Image URL or upload a file.');
 
     try {
-      await api.addPhoto(newPhoto);
+      const formatted = {
+        ...newPhoto,
+        imageUrl: formatImageUrl(newPhoto.imageUrl)
+      };
+      await api.addPhoto(formatted);
       setNewPhoto({ title: '', imageUrl: '', caption: '', category: 'album', rotation: 0 });
       loadMedia();
     } catch (err) {
@@ -146,7 +151,7 @@ export default function AdminMedia() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {photos.map((photo) => (
             <div key={photo._id} className="p-3 bg-white rounded-2xl border border-slate-200 shadow-md relative group">
-              <img src={photo.imageUrl} alt={photo.caption} className="w-full h-36 object-cover rounded-xl" />
+              <img src={formatImageUrl(photo.imageUrl)} alt={photo.caption} className="w-full h-36 object-cover rounded-xl" />
               <div className="mt-2 text-center text-xs font-handwritten font-bold text-slate-800 truncate">
                 {photo.caption || 'No Caption'}
               </div>

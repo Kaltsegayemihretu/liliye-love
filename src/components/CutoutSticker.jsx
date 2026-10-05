@@ -1,7 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { formatImageUrl } from '../utils/image';
 
 export default function CutoutSticker({ imageUrl, caption, rotation = 0, className = '', onClick }) {
+  const safeUrl = formatImageUrl(imageUrl);
+
   return (
     <motion.div
       whileHover={{ scale: 1.08, rotate: 0, zIndex: 30 }}
@@ -16,7 +19,7 @@ export default function CutoutSticker({ imageUrl, caption, rotation = 0, classNa
       {/* Image Container */}
       <div className="overflow-hidden rounded-2xl bg-slate-100 aspect-square">
         <img
-          src={imageUrl}
+          src={safeUrl}
           alt={caption || 'Memory'}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
