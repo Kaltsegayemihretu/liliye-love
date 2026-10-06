@@ -26,7 +26,7 @@ export default function AudioPlayerWidget() {
             {bgPlaying ? 'PLAYING BACKGROUND MUSIC' : 'BACKGROUND SOUNDTRACK'}
           </div>
           <div className="text-xs font-semibold text-slate-800">
-            I Wanna Be Yours
+            Burna Boy - For My Hand (feat. Ed Sheeran)
           </div>
         </div>
       </div>

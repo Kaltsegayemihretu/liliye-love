@@ -13,7 +13,7 @@ export const AudioProvider = ({ children }) => {
   const playlistAudioRef = useRef(null);
   const fadeIntervalRef = useRef(null);
 
-  // Background Audio initialization
+  // Background Audio initialization & Auto-play setup
   useEffect(() => {
     bgAudioRef.current = new Audio('https://docs.google.com/uc?export=download&id=1jZ5-GXKCUuS9PC4OLvVJDxzu87vn8EUb');
     bgAudioRef.current.loop = true;
@@ -21,7 +21,36 @@ export const AudioProvider = ({ children }) => {
 
     playlistAudioRef.current = new Audio();
 
+    // Attempt instant autoplay when site opens
+    const tryAutoplay = () => {
+      if (bgAudioRef.current && bgAudioRef.current.paused) {
+        bgAudioRef.current.volume = bgVolume;
+        bgAudioRef.current.loop = true;
+        bgAudioRef.current.play()
+          .then(() => {
+            setBgPlaying(true);
+            removeListeners();
+          })
+          .catch(() => {});
+      }
+    };
+
+    const removeListeners = () => {
+      window.removeEventListener('click', tryAutoplay);
+      window.removeEventListener('touchstart', tryAutoplay);
+      window.removeEventListener('keydown', tryAutoplay);
+    };
+
+    // Try immediately on load
+    tryAutoplay();
+
+    // Attach interaction listeners so the song plays on the very first touch/click
+    window.addEventListener('click', tryAutoplay);
+    window.addEventListener('touchstart', tryAutoplay);
+    window.addEventListener('keydown', tryAutoplay);
+
     return () => {
+      removeListeners();
       if (bgAudioRef.current) bgAudioRef.current.pause();
       if (playlistAudioRef.current) playlistAudioRef.current.pause();
     };
@@ -34,7 +63,7 @@ export const AudioProvider = ({ children }) => {
       bgAudioRef.current.volume = bgVolume;
       bgAudioRef.current.play()
         .then(() => setBgPlaying(true))
-        .catch(err => console.warn('Autoplay blocked until user interaction:', err));
+        .catch(() => {});
     }
   };
 
