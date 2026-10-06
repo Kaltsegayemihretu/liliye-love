@@ -15,7 +15,7 @@ export const AudioProvider = ({ children }) => {
 
   // Background Audio initialization & Auto-play setup
   useEffect(() => {
-    const audioUrl = 'https://docs.google.com/uc?export=download&id=1jZ5-GXKCUuS9PC4OLvVJDxzu87vn8EUb';
+    const audioUrl = '/audio/for-my-hand.mp3';
     bgAudioRef.current = new Audio(audioUrl);
     bgAudioRef.current.loop = true;
     bgAudioRef.current.volume = bgVolume;
