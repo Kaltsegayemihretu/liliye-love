@@ -81,7 +81,8 @@ export const AudioProvider = ({ children }) => {
 
   // Play background song after user interaction/name entry
   const startBackgroundMusic = () => {
-    if (bgAudioRef.current && !boomboxActive && !userManuallyPaused.current) {
+    if (bgAudioRef.current && !boomboxActive) {
+      userManuallyPaused.current = false;
       bgAudioRef.current.loop = true;
       bgAudioRef.current.volume = bgVolume;
       if (bgAudioRef.current.paused) {
@@ -96,7 +97,8 @@ export const AudioProvider = ({ children }) => {
 
   const toggleBackgroundMusic = () => {
     if (!bgAudioRef.current) return;
-    if (bgPlaying) {
+    const isPlaying = !bgAudioRef.current.paused;
+    if (isPlaying) {
       userManuallyPaused.current = true;
       bgAudioRef.current.pause();
       setBgPlaying(false);

@@ -17,23 +17,27 @@ export default function LoginPage() {
   const { startBackgroundMusic } = useAudio();
   const navigate = useNavigate();
 
-  const handleNameSubmit = async (e) => {
+  const handleNameSubmit = (e) => {
     e.preventDefault();
     if (!name.trim()) return setError('Please enter your name.');
+    const clean = name.trim();
     setError('');
-    setLoading(true);
 
-    try {
-      const res = await api.nameLogin(name.trim());
-      localStorage.setItem('her_name', name.trim());
-      localStorage.setItem('token', res.token);
-      if (startBackgroundMusic) startBackgroundMusic();
-      navigate('/');
-    } catch (err) {
-      setError(err.message || 'Login failed.');
-    } finally {
-      setLoading(false);
-    }
+    // Synchronously set name, start music, and navigate instantly on 1st click
+    localStorage.setItem('her_name', clean);
+    if (startBackgroundMusic) startBackgroundMusic();
+    navigate('/');
+
+    // Send server-side login tracking event asynchronously without blocking navigation
+    api.nameLogin(clean)
+      .then((res) => {
+        if (res && res.token) {
+          localStorage.setItem('token', res.token);
+        }
+      })
+      .catch((err) => {
+        console.warn('Background login api notification warning:', err);
+      });
   };
 
   const handleAdminSubmit = async (e) => {
