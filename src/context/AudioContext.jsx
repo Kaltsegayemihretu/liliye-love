@@ -12,6 +12,7 @@ export const AudioProvider = ({ children }) => {
   const bgAudioRef = useRef(null);
   const playlistAudioRef = useRef(null);
   const fadeIntervalRef = useRef(null);
+  const userManuallyPaused = useRef(false);
 
   // Background Audio initialization & Auto-play setup
   useEffect(() => {
@@ -22,9 +23,9 @@ export const AudioProvider = ({ children }) => {
 
     playlistAudioRef.current = new Audio();
 
-    // Explicit ended handler to guarantee looping even if 302 redirects prevent native seeking
+    // Explicit ended handler to guarantee looping continuously
     const handleEnded = () => {
-      if (bgAudioRef.current) {
+      if (bgAudioRef.current && !userManuallyPaused.current) {
         bgAudioRef.current.currentTime = 0;
         bgAudioRef.current.play()
           .then(() => setBgPlaying(true))
@@ -39,16 +40,16 @@ export const AudioProvider = ({ children }) => {
 
     // Attempt instant autoplay when site opens
     const tryAutoplay = () => {
-      if (bgAudioRef.current) {
+      if (userManuallyPaused.current) return;
+      if (bgAudioRef.current && bgAudioRef.current.paused && !boomboxActive) {
         bgAudioRef.current.volume = bgVolume;
         bgAudioRef.current.loop = true;
-        if (bgAudioRef.current.paused) {
-          bgAudioRef.current.play()
-            .then(() => {
-              setBgPlaying(true);
-            })
-            .catch(() => {});
-        }
+        bgAudioRef.current.play()
+          .then(() => {
+            setBgPlaying(true);
+            removeListeners();
+          })
+          .catch(() => {});
       }
     };
 
@@ -80,7 +81,7 @@ export const AudioProvider = ({ children }) => {
 
   // Play background song after user interaction/name entry
   const startBackgroundMusic = () => {
-    if (bgAudioRef.current && !boomboxActive) {
+    if (bgAudioRef.current && !boomboxActive && !userManuallyPaused.current) {
       bgAudioRef.current.loop = true;
       bgAudioRef.current.volume = bgVolume;
       if (bgAudioRef.current.paused) {
@@ -96,11 +97,16 @@ export const AudioProvider = ({ children }) => {
   const toggleBackgroundMusic = () => {
     if (!bgAudioRef.current) return;
     if (bgPlaying) {
+      userManuallyPaused.current = true;
       bgAudioRef.current.pause();
       setBgPlaying(false);
     } else {
+      userManuallyPaused.current = false;
+      bgAudioRef.current.loop = true;
       bgAudioRef.current.volume = bgVolume;
-      bgAudioRef.current.play().then(() => setBgPlaying(true)).catch(() => {});
+      bgAudioRef.current.play()
+        .then(() => setBgPlaying(true))
+        .catch(() => {});
     }
   };
 
