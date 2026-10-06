@@ -15,7 +15,7 @@ export const AudioProvider = ({ children }) => {
 
   // Background Audio initialization
   useEffect(() => {
-    bgAudioRef.current = new Audio('https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3?filename=piano-moment-112708.mp3');
+    bgAudioRef.current = new Audio('https://docs.google.com/uc?export=download&id=1jZ5-GXKCUuS9PC4OLvVJDxzu87vn8EUb');
     bgAudioRef.current.loop = true;
     bgAudioRef.current.volume = bgVolume;
 
@@ -27,9 +27,10 @@ export const AudioProvider = ({ children }) => {
     };
   }, []);
 
-  // Play background song after interaction
+  // Play background song after user interaction/name entry
   const startBackgroundMusic = () => {
-    if (bgAudioRef.current && !bgPlaying && !boomboxActive) {
+    if (bgAudioRef.current && !boomboxActive) {
+      bgAudioRef.current.loop = true;
       bgAudioRef.current.volume = bgVolume;
       bgAudioRef.current.play()
         .then(() => setBgPlaying(true))

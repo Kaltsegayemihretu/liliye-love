@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { Heart, User, Lock, Mail, ArrowRight, Shield, AlertCircle } from 'lucide-react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useAudio } from '../context/AudioContext';
 
 export default function LoginPage() {
   const [name, setName] = useState('');
@@ -13,6 +14,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
+  const { startBackgroundMusic } = useAudio();
   const navigate = useNavigate();
 
   const handleNameSubmit = async (e) => {
@@ -25,6 +27,7 @@ export default function LoginPage() {
       const res = await api.nameLogin(name.trim());
       localStorage.setItem('her_name', name.trim());
       localStorage.setItem('token', res.token);
+      if (startBackgroundMusic) startBackgroundMusic();
       navigate('/');
     } catch (err) {
       setError(err.message || 'Login failed.');

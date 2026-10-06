@@ -30,3 +30,17 @@ export function getFallbackDriveUrl(url) {
   }
   return url;
 }
+
+export function formatAudioUrl(url) {
+  if (!url || typeof url !== 'string') return url;
+  const trimmed = url.trim();
+
+  if (trimmed.includes('drive.google.com') || trimmed.includes('docs.google.com')) {
+    const fileId = extractDriveFileId(trimmed);
+    if (fileId) {
+      return `https://docs.google.com/uc?export=download&id=${fileId}`;
+    }
+  }
+
+  return trimmed;
+}

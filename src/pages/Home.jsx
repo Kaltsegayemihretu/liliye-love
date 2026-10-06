@@ -5,6 +5,7 @@ import confetti from 'canvas-confetti';
 import { Heart, Sparkles, Clock, Send, CheckCircle2, User } from 'lucide-react';
 import { api } from '../services/api';
 import { formatImageUrl, getFallbackDriveUrl } from '../utils/image';
+import { useAudio } from '../context/AudioContext';
 
 import Navbar from '../components/Navbar';
 import CutoutSticker from '../components/CutoutSticker';
@@ -14,6 +15,7 @@ import DistanceMap from '../components/DistanceMap';
 
 export default function Home() {
   const navigate = useNavigate();
+  const { startBackgroundMusic } = useAudio() || {};
   const [content, setContent] = useState(null);
   const [photos, setPhotos] = useState([]);
   const [timeline, setTimeline] = useState([]);
@@ -36,6 +38,10 @@ export default function Home() {
     if (!localStorage.getItem('her_name')) {
       navigate('/login');
       return;
+    }
+
+    if (startBackgroundMusic) {
+      startBackgroundMusic();
     }
 
     const loadData = async () => {
@@ -75,6 +81,7 @@ export default function Home() {
     setHerName(clean);
     localStorage.setItem('her_name', clean);
     setShowNameModal(false);
+    if (startBackgroundMusic) startBackgroundMusic();
 
     try {
       await api.nameLogin(clean);
