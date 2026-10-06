@@ -15,23 +15,40 @@ export const AudioProvider = ({ children }) => {
 
   // Background Audio initialization & Auto-play setup
   useEffect(() => {
-    bgAudioRef.current = new Audio('https://docs.google.com/uc?export=download&id=1jZ5-GXKCUuS9PC4OLvVJDxzu87vn8EUb');
+    const audioUrl = 'https://docs.google.com/uc?export=download&id=1jZ5-GXKCUuS9PC4OLvVJDxzu87vn8EUb';
+    bgAudioRef.current = new Audio(audioUrl);
     bgAudioRef.current.loop = true;
     bgAudioRef.current.volume = bgVolume;
 
     playlistAudioRef.current = new Audio();
 
+    // Explicit ended handler to guarantee looping even if 302 redirects prevent native seeking
+    const handleEnded = () => {
+      if (bgAudioRef.current) {
+        bgAudioRef.current.currentTime = 0;
+        bgAudioRef.current.play()
+          .then(() => setBgPlaying(true))
+          .catch(() => {
+            bgAudioRef.current.src = audioUrl;
+            bgAudioRef.current.play().then(() => setBgPlaying(true)).catch(() => {});
+          });
+      }
+    };
+
+    bgAudioRef.current.addEventListener('ended', handleEnded);
+
     // Attempt instant autoplay when site opens
     const tryAutoplay = () => {
-      if (bgAudioRef.current && bgAudioRef.current.paused) {
+      if (bgAudioRef.current) {
         bgAudioRef.current.volume = bgVolume;
         bgAudioRef.current.loop = true;
-        bgAudioRef.current.play()
-          .then(() => {
-            setBgPlaying(true);
-            removeListeners();
-          })
-          .catch(() => {});
+        if (bgAudioRef.current.paused) {
+          bgAudioRef.current.play()
+            .then(() => {
+              setBgPlaying(true);
+            })
+            .catch(() => {});
+        }
       }
     };
 
@@ -39,6 +56,7 @@ export const AudioProvider = ({ children }) => {
       window.removeEventListener('click', tryAutoplay);
       window.removeEventListener('touchstart', tryAutoplay);
       window.removeEventListener('keydown', tryAutoplay);
+      window.removeEventListener('pointerdown', tryAutoplay);
     };
 
     // Try immediately on load
@@ -48,10 +66,14 @@ export const AudioProvider = ({ children }) => {
     window.addEventListener('click', tryAutoplay);
     window.addEventListener('touchstart', tryAutoplay);
     window.addEventListener('keydown', tryAutoplay);
+    window.addEventListener('pointerdown', tryAutoplay);
 
     return () => {
       removeListeners();
-      if (bgAudioRef.current) bgAudioRef.current.pause();
+      if (bgAudioRef.current) {
+        bgAudioRef.current.removeEventListener('ended', handleEnded);
+        bgAudioRef.current.pause();
+      }
       if (playlistAudioRef.current) playlistAudioRef.current.pause();
     };
   }, []);
@@ -61,9 +83,13 @@ export const AudioProvider = ({ children }) => {
     if (bgAudioRef.current && !boomboxActive) {
       bgAudioRef.current.loop = true;
       bgAudioRef.current.volume = bgVolume;
-      bgAudioRef.current.play()
-        .then(() => setBgPlaying(true))
-        .catch(() => {});
+      if (bgAudioRef.current.paused) {
+        bgAudioRef.current.play()
+          .then(() => setBgPlaying(true))
+          .catch(() => {});
+      } else {
+        setBgPlaying(true);
+      }
     }
   };
 
