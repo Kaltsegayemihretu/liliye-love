@@ -73,19 +73,23 @@ app.post('/api/auth/name-login', async (req, res) => {
     const cleanName = name.trim();
     const loginEntry = await persistentStore.addLogin(cleanName);
 
-    // Email Notification to Admin
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@liliye.love';
-    sendEmail({
-      to: adminEmail,
-      subject: `💖 ${cleanName} signed into your website!`,
-      text: `${cleanName} signed in at ${new Date().toLocaleString()}`,
-      html: buildNotificationEmailHtml({
-        title: `${cleanName} Signed In 💖`,
-        messageText: `${cleanName} signed into your website on ${new Date().toLocaleString()}`,
-        actionUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin`,
-        actionText: "View Admin Dashboard"
-      })
-    });
+    // Email Notification to Admin (non-blocking)
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@liliye.love';
+      sendEmail({
+        to: adminEmail,
+        subject: `💖 ${cleanName} signed into your website!`,
+        text: `${cleanName} signed in at ${new Date().toLocaleString()}`,
+        html: buildNotificationEmailHtml({
+          title: `${cleanName} Signed In 💖`,
+          messageText: `${cleanName} signed into your website on ${new Date().toLocaleString()}`,
+          actionUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin`,
+          actionText: "View Admin Dashboard"
+        })
+      });
+    } catch (e) {
+      console.warn('Login email notification warning:', e.message);
+    }
 
     const userObj = { id: 'her_' + Date.now(), name: cleanName, role: 'her' };
     const token = generateToken(userObj);
@@ -166,22 +170,27 @@ app.post('/api/events/response-message', async (req, res) => {
 
     const senderName = (name && name.trim()) ? name.trim() : 'Her';
     const cleanMsg = message.trim();
+    const now = new Date();
 
     const responseObj = await persistentStore.addResponseMessage(senderName, cleanMsg);
 
-    // Email Notification to Admin
-    const adminEmail = process.env.ADMIN_EMAIL || 'admin@liliye.love';
-    sendEmail({
-      to: adminEmail,
-      subject: `💌 ${senderName} Sent You A Message!`,
-      text: `${senderName} wrote: "${cleanMsg}" on ${now.toLocaleString()}`,
-      html: buildNotificationEmailHtml({
-        title: `${senderName} Sent You A Message! 💌`,
-        messageText: `"${cleanMsg}"`,
-        actionUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin`,
-        actionText: "View Message in Admin Dashboard"
-      })
-    });
+    // Email Notification to Admin (non-blocking)
+    try {
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@liliye.love';
+      sendEmail({
+        to: adminEmail,
+        subject: `💌 ${senderName} Sent You A Message!`,
+        text: `${senderName} wrote: "${cleanMsg}" on ${now.toLocaleString()}`,
+        html: buildNotificationEmailHtml({
+          title: `${senderName} Sent You A Message! 💌`,
+          messageText: `"${cleanMsg}"`,
+          actionUrl: `${process.env.FRONTEND_URL || 'http://localhost:5173'}/admin`,
+          actionText: "View Message in Admin Dashboard"
+        })
+      });
+    } catch (e) {
+      console.warn('Email sending notification warning:', e.message);
+    }
 
     return res.status(201).json({
       success: true,
@@ -189,6 +198,7 @@ app.post('/api/events/response-message', async (req, res) => {
       data: responseObj
     });
   } catch (err) {
+    console.error('Error saving response message:', err);
     return res.status(500).json({ error: 'Failed to save message.' });
   }
 });
