@@ -3,15 +3,35 @@ import { Users, Heart, Sparkles, User, RefreshCw, Clock, Trash2, RotateCcw } fro
 import { api } from '../../services/api';
 
 export default function AdminDashboard() {
-  const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState(() => {
+    try {
+      const cached = localStorage.getItem('admin_analytics_backup');
+      return cached ? JSON.parse(cached) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  const [loading, setLoading] = useState(!data);
+
+  const updateDashboardState = (newData) => {
+    setData(newData);
+    try {
+      localStorage.setItem('admin_analytics_backup', JSON.stringify(newData));
+    } catch (e) {}
+  };
 
   const loadAnalytics = async () => {
     try {
       const res = await api.getDashboardAnalytics();
-      setData(res);
+      if (res) {
+        updateDashboardState(res);
+      }
     } catch (err) {
       console.warn('Failed to load admin analytics:', err);
+      const cached = localStorage.getItem('admin_analytics_backup');
+      if (cached) {
+        try { setData(JSON.parse(cached)); } catch (e) {}
+      }
     } finally {
       setLoading(false);
     }
@@ -27,7 +47,7 @@ export default function AdminDashboard() {
     if (window.confirm("Are you sure you want to reset all dashboard overview data to 0? This will permanently delete all recorded visits, sign-ins, and messages.")) {
       try {
         await api.clearDashboardAnalytics();
-        setData({ totalSessions: 0, userLogins: [], responseMessages: [] });
+        updateDashboardState({ totalSessions: 0, userLogins: [], responseMessages: [] });
       } catch (err) {
         alert("Failed to reset dashboard data: " + err.message);
       }
@@ -37,11 +57,12 @@ export default function AdminDashboard() {
   const handleDeleteLogin = async (id) => {
     try {
       await api.deleteLoginEntry(id);
-      setData(prev => ({
-        ...prev,
-        totalSessions: Math.max(0, (prev?.totalSessions || 0) - 1),
-        userLogins: (prev?.userLogins || []).filter(i => i._id !== id)
-      }));
+      const updatedLogins = (data?.userLogins || []).filter(i => i._id !== id && i.customId !== id);
+      updateDashboardState({
+        ...data,
+        totalSessions: Math.max(0, (data?.totalSessions || 0) - 1),
+        userLogins: updatedLogins
+      });
     } catch (err) {
       alert("Failed to delete sign-in entry: " + err.message);
     }
@@ -50,16 +71,17 @@ export default function AdminDashboard() {
   const handleDeleteMessage = async (id) => {
     try {
       await api.deleteMessageEntry(id);
-      setData(prev => ({
-        ...prev,
-        responseMessages: (prev?.responseMessages || []).filter(i => i._id !== id)
-      }));
+      const updatedMessages = (data?.responseMessages || []).filter(i => i._id !== id && i.customId !== id);
+      updateDashboardState({
+        ...data,
+        responseMessages: updatedMessages
+      });
     } catch (err) {
       alert("Failed to delete message entry: " + err.message);
     }
   };
 
-  if (loading) {
+  if (loading && !data) {
     return <div className="p-8 text-center text-slate-400 font-semibold">Loading Admin Dashboard...</div>;
   }
 

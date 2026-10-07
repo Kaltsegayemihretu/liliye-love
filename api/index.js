@@ -7,6 +7,7 @@ import { connectToDatabase } from './utils/db.js';
 import { seedInitialData } from './utils/seedData.js';
 import { generateToken, requireAuth, requireAdmin } from './utils/auth.js';
 import { sendEmail, buildNotificationEmailHtml } from './utils/email.js';
+import { persistentStore } from './utils/persistentStore.js';
 
 import User from './models/User.js';
 import Photo from './models/Photo.js';
@@ -70,35 +71,7 @@ app.post('/api/auth/name-login', async (req, res) => {
     }
 
     const cleanName = name.trim();
-    const loginEntry = {
-      _id: 'login_' + Date.now(),
-      name: cleanName,
-      timestamp: new Date()
-    };
-
-    inMemoryStore.userLogins.unshift(loginEntry);
-    inMemoryStore.notifications.unshift({
-      _id: 'notif_' + Date.now(),
-      title: `Her Signed In: ${cleanName} 💖`,
-      message: `${cleanName} signed into website at ${new Date().toLocaleTimeString()}`,
-      type: 'login',
-      read: false,
-      createdAt: new Date()
-    });
-
-    // Save to MongoDB if available
-    await AnalyticsEvent.create({
-      eventType: 'Login',
-      metadata: { visitorName: cleanName },
-      timestamp: new Date()
-    }).catch(() => {});
-
-    await Notification.create({
-      title: `Her Signed In: ${cleanName} 💖`,
-      message: `${cleanName} signed in on ${new Date().toLocaleString()}`,
-      type: 'login',
-      link: '/admin'
-    }).catch(() => {});
+    const loginEntry = await persistentStore.addLogin(cleanName);
 
     // Email Notification to Admin
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@liliye.love';
@@ -117,7 +90,7 @@ app.post('/api/auth/name-login', async (req, res) => {
     const userObj = { id: 'her_' + Date.now(), name: cleanName, role: 'her' };
     const token = generateToken(userObj);
 
-    return res.json({ token, user: userObj });
+    return res.json({ token, user: userObj, loginEntry });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to record sign-in.' });
   }
@@ -193,38 +166,8 @@ app.post('/api/events/response-message', async (req, res) => {
 
     const senderName = (name && name.trim()) ? name.trim() : 'Her';
     const cleanMsg = message.trim();
-    const now = new Date();
 
-    const responseObj = {
-      _id: 'resp_' + Date.now(),
-      name: senderName,
-      message: cleanMsg,
-      timestamp: now
-    };
-
-    inMemoryStore.responseMessages.unshift(responseObj);
-    inMemoryStore.notifications.unshift({
-      _id: 'notif_' + Date.now(),
-      title: `💌 ${senderName} Sent You A Message!`,
-      message: `"${cleanMsg}"`,
-      type: 'final_button',
-      read: false,
-      createdAt: now
-    });
-
-    // Save to MongoDB if available
-    await AnalyticsEvent.create({
-      eventType: 'Final button clicked',
-      metadata: { name: senderName, responseText: cleanMsg },
-      timestamp: now
-    }).catch(() => {});
-
-    await Notification.create({
-      title: `💌 ${senderName} Sent You A Message!`,
-      message: `"${cleanMsg}"`,
-      type: 'final_button',
-      link: '/admin'
-    }).catch(() => {});
+    const responseObj = await persistentStore.addResponseMessage(senderName, cleanMsg);
 
     // Email Notification to Admin
     const adminEmail = process.env.ADMIN_EMAIL || 'admin@liliye.love';
@@ -675,56 +618,14 @@ app.post('/api/analytics/event', async (req, res) => res.status(201).json({ succ
 
 app.get('/api/analytics/dashboard', requireAdmin, async (req, res) => {
   try {
-    let mongoLogins = [];
-    let mongoResponses = [];
-    let mongoSessionsCount = 0;
-
-    try {
-      const loginEvents = await AnalyticsEvent.find({ eventType: 'Login' }).sort({ timestamp: -1 });
-      mongoLogins = loginEvents.map(e => ({
-        _id: e._id ? e._id.toString() : 'log_' + Math.random(),
-        name: e.metadata?.visitorName || 'Her',
-        timestamp: e.timestamp || e.createdAt
-      }));
-
-      const responseEvents = await AnalyticsEvent.find({ eventType: 'Final button clicked' }).sort({ timestamp: -1 });
-      mongoResponses = responseEvents.map(e => ({
-        _id: e._id ? e._id.toString() : 'resp_' + Math.random(),
-        name: e.metadata?.name || 'Her',
-        message: e.metadata?.responseText || '',
-        timestamp: e.timestamp || e.createdAt
-      }));
-
-      mongoSessionsCount = await VisitorSession.countDocuments();
-    } catch (e) {}
-
-    // Combine MongoDB and in-memory list for logins without duplicates
-    const combinedLoginsMap = new Map();
-    inMemoryStore.userLogins.forEach(item => combinedLoginsMap.set(item._id, item));
-    mongoLogins.forEach(item => combinedLoginsMap.set(item._id, item));
-
-    // Combine MongoDB and in-memory list for responses without duplicates
-    const combinedResponsesMap = new Map();
-    inMemoryStore.responseMessages.forEach(item => combinedResponsesMap.set(item._id, item));
-    mongoResponses.forEach(item => combinedResponsesMap.set(item._id, item));
-
-    const userLogins = Array.from(combinedLoginsMap.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-    const responseMessages = Array.from(combinedResponsesMap.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
-
-    // Total site visits: max of visitor sessions count, in-memory sessions, and login count
-    const totalVisits = Math.max(mongoSessionsCount, inMemoryStore.visitorSessions.size, userLogins.length);
-
-    return res.json({
-      totalSessions: totalVisits,
-      userLogins,
-      responseMessages
-    });
+    const data = await persistentStore.getDashboardAnalytics();
+    return res.json(data);
   } catch (err) {
-    const fallbackVisits = Math.max(inMemoryStore.visitorSessions.size, inMemoryStore.userLogins.length);
+    const store = persistentStore.getStore();
     return res.json({
-      totalSessions: fallbackVisits,
-      userLogins: inMemoryStore.userLogins,
-      responseMessages: inMemoryStore.responseMessages
+      totalSessions: store.visitorSessions.length,
+      userLogins: store.userLogins,
+      responseMessages: store.responseMessages
     });
   }
 });
@@ -732,15 +633,7 @@ app.get('/api/analytics/dashboard', requireAdmin, async (req, res) => {
 // Clear all analytics & reset counters to 0
 app.delete('/api/analytics/clear', requireAdmin, async (req, res) => {
   try {
-    await AnalyticsEvent.deleteMany({}).catch(() => {});
-    await VisitorSession.deleteMany({}).catch(() => {});
-    await Notification.deleteMany({}).catch(() => {});
-
-    inMemoryStore.userLogins = [];
-    inMemoryStore.responseMessages = [];
-    inMemoryStore.visitorSessions.clear();
-    inMemoryStore.notifications = [];
-
+    await persistentStore.clearAll();
     return res.json({ success: true, message: 'All analytics and overview data reset to 0.' });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to reset analytics data.' });
@@ -751,10 +644,7 @@ app.delete('/api/analytics/clear', requireAdmin, async (req, res) => {
 app.delete('/api/analytics/login/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    await AnalyticsEvent.findByIdAndDelete(id).catch(() => {});
-    await Notification.findByIdAndDelete(id).catch(() => {});
-
-    inMemoryStore.userLogins = inMemoryStore.userLogins.filter(i => i._id !== id);
+    await persistentStore.deleteLogin(id);
     return res.json({ success: true, id });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to delete sign-in log entry.' });
@@ -765,10 +655,7 @@ app.delete('/api/analytics/login/:id', requireAdmin, async (req, res) => {
 app.delete('/api/analytics/message/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    await AnalyticsEvent.findByIdAndDelete(id).catch(() => {});
-    await Notification.findByIdAndDelete(id).catch(() => {});
-
-    inMemoryStore.responseMessages = inMemoryStore.responseMessages.filter(i => i._id !== id);
+    await persistentStore.deleteMessage(id);
     return res.json({ success: true, id });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to delete message entry.' });
@@ -779,13 +666,8 @@ app.delete('/api/analytics/message/:id', requireAdmin, async (req, res) => {
 app.delete('/api/analytics/entry/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    await AnalyticsEvent.findByIdAndDelete(id).catch(() => {});
-    await Notification.findByIdAndDelete(id).catch(() => {});
-
-    inMemoryStore.userLogins = inMemoryStore.userLogins.filter(i => i._id !== id);
-    inMemoryStore.responseMessages = inMemoryStore.responseMessages.filter(i => i._id !== id);
-    inMemoryStore.notifications = inMemoryStore.notifications.filter(i => i._id !== id);
-
+    await persistentStore.deleteLogin(id);
+    await persistentStore.deleteMessage(id);
     return res.json({ success: true, id });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to delete entry.' });
