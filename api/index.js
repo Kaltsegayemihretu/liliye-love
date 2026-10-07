@@ -283,41 +283,37 @@ app.get('/api/content', async (req, res) => {
       subtitle: "Tap to open",
       singleLetterText: `Liliye,
 
-I remember the first time we met like it was yesterday. We were learning our license, walking down the stairs, and I asked you if it was boring. You replied, “No, not really.” I asked you to send me the document, but honestly, I just wanted your number.
+I remember the first time we met like it was yesterday. We were learning our driving license, we were walking down the stairs, and I asked you if it was boring. You replied, “No, not really.” I asked you to send me the document, but honestly, I just wanted your number.
 
-The next day, you agreed to walk with me to Imperial, and then we walked all the way to your home, talking the entire journey together. It wasn’t awkward at all. I still get chills just thinking about it. I told you that you had beautiful nails and held your bag like the gentleman I am. We started talking, and I asked you out. You said no, telling me you liked older men in their mid-30s. Like, bruh...
+The next day, you agreed to walk with me to Imperial, and then we walked all the way to your home, talking the entire journey together. It wasn’t awkward at all. I still get chills just thinking about it. I told you that you had beautiful nails and held your bag like the gentleman I am. We started talking, and I asked you out. You said no, telling me you liked older men in their mid-30s.
 
-I ghosted you after you said no. I prayed you would text me back, and after 15 days, you finally said, “Hey.” It took me a day to reply, but I’m so glad I did.
+I ghosted you after you said no. I prayed you would text me back, and after 15 days, you finally said, “Hey.”. I’m so glad you did.
 
-We talked more, and you applied to AASTU and got accepted for the entrance exam. We met there. Man, I looked at you the whole day. Even Halle noticed it, haha. We called a ride together and walked to the front gates, but then I got a migraine. I got so sick, remember? I was so mad because I wanted to have lunch with you that day. I remember wanting to lay my head on your thighs because I was so tired too.
+We talked more, and you applied to AASTU and got accepted for the entrance exam. We decided to meet at AASTU. I couldn't stop laying my eyes on you my love. Even Halle noticed it, haha. We called a ride together and walked to the front gates, but then I got SICk, migraine  remember? I was so mad because I wanted to have lunch with you that day. I remember wanting to lay my head on your thighs because I was so tired and sick.
 
-But somehow, we still met up. First, I waited for you at Caramel Café, and then we went to Coffeecology. It was our first date.
+But somehow, we went out. I waited for you at the caramel cafe and then we went to coffecology. We talked we laughed you ordered cocktail we both did actually, we didn’t like it….and we ORDERED waffles and pancakes for lunch hehehe remember. Mazi won the first spot Eqube tela.
 
-LILIYE, I LOVE YOU. PLEASE, LET’S BE TOGETHER AGAIN. I WON’T MESS IT UP THIS TIME.
+LILIYE, I LOVE YOU. PLEASE, LET’S GET BACK TOGETHER AGAIN. I WON’T MESS IT UP THIS TIME. I SWEAR TO GOD.
 
 After our first date, you told me you wanted to go out again. I had never felt so much like a man. We went to Nu Cheka Enabuka and then to Century. You were checking my Instagram the whole time, looking for other girls, which you didn’t find. Thank God there weren’t any.
 
 It was Fantu’s birthday, so we had to rush home. You were a bit sad because you wanted to spend more time together.
 
-Once we got accepted at AASTU, we started going home together. You were so funny, Liliye. I’m so sorry I had to mess this up, but we can still make this work, my love. I’m sorry, my love.
+Once we got accepted at AASTU, we started going home together. You were so funny, Liliye. GASH i had to admit that you’re funny to get back with you mtsm haha. I remember how i look at you GOD your eyes they were so beautiful…..i used to lean on the front seat of the taxi head against my forearms looking at your eyes and you would smile at me. It was the most beautiful thing in this world.
 
-One day, we were crossing the road, and you held my hand. I still remember the rush I felt before you pulled away.
+You remember the day we were crossing the road, and you held my hand for a split of a second and you let me go. I still remember the rush I felt before you pulled away. Oh, and the day before, I forgot my document with you and came to your house wearing a gold necklace. You came out and gave it to me, and I texted you asking why you had put a stain on my document, i said something funny like you “did you let it eat with you”. You said, “Cute,” and made me blush.
 
-Oh, and the day before, I forgot my document with you and came to your house wearing a gold necklace. You came out and gave it to me, and I texted you asking why you had put a stain on my document, saying something funny like you let it eat with you. You said, “Cute,” and made me blush.
-
-You were the first person to truly love me, Liliye, and I truly loved you back. I miss you like I did in the old days. I will marry you, Liliye, no matter what.
+You were the first person to truly love me, Liliye, and I truly loved back. I miss you like I did in the old days. I will marry you, Liliye, no matter what.
 
 Anyway, after you held my hand, we went to Karavan and talked about where this relationship was going. You said you liked me, but you wanted friends with benefits.
 
-YOU SAID IT FIRST, and then I agreed.
+YOU SAID IT DON’T DENY IT, and then I agreed. I MISS THIS GUFFY FIGHTS WE HAD LIKE WHO SAID I LOVE YOU FIRST OR YOU SAID YOU WANTED TO BE FRIENDS WITH BENFITS.
 
-We started whatever that was for a week. Do you remember, Liliye, the way we used to hold hands when we sat at the basketball court?
+We started whatever that was for a week. Do you remember, Liliye, the way we used to hold hands when we sat at the basketball court? HEHEHE we we’re so corny i swear to god hahah i can’t stop laughing writing this. And Cry also…….I MENTIONED CRY BECAUSE YOU TOLD ME YOU WOULD LOVE TO SEE ME CRY AND THEN YOU WOULD COMFORT ME…..I CRIED ALOT ESKI NEYE ENA ABABYEGN.
 
-Then I told you to stop the friends-with-benefits thing and start dating seriously. You were a bit unsure. I remember, my love.
+Then I told you to stop the friends-with-benefits thing and start dating seriously. You were a bit unsure. We were imperfect, and that is what made us perfect. We went to Eliana and watched movies. Then we ate at Ako, and you were wearing your cardigan. Then we went to Elaina Café, and we talked. Then we became boyfriend and girlfriend. God the walks we used to take the talks we used to talk……we counted the stars we saw crazy BEINGS, remember the time the fly won’t stop circling my head hehe. What about the kisses we were so paranoid to make out because of the guards hehehe they would shine the light on us to make sure we weren’t doing anything. I would tread everything for those moments of my love.
 
-We were imperfect, and that is what made us perfect. We started having sleepovers, watching movies, making love, learning things, and experiencing life together.
-
-We went to Eliana and watched movies. Then we ate at Ako, and you were wearing your cardigan. Then we went to Elaina Café, and we talked. That was when we became boyfriend and girlfriend.
+Afripolitan and Ag used to be our home eko yene fiker, im sorry i had to ruine what we had. But i promise im truly changed matured to i can make you happier then now or ever our story shouldn’t end like this. Lets not end it liliyee benatshe. Yene fiker i miss you i love you. Even my family misses you truly. Please we can never find a love story like this. We loved each other and i believe we can love each other more. Last time we talked you you said you didn’t feel loved in our relationship…….i will make sure that will happen my love their is no deseret i wouldn’t cross for you.
 
 My love, BE EGEZIABHER YKERE BEYEGN, let’s not ruin this.
 
@@ -339,7 +335,7 @@ Do you remember the time you met Hilu and Tamu?
 
 Liliye, sentun text laregew.
 
-I want to remember and reminisce about the past with you, have kids with you, and build a house together with you. Only you. Just the way you like it.
+I want you to remember and reminisce about the past we had,i want to have kids with you, and build a house together with you. Only you. Just the way you like it.
 
 I will die for you, literally.
 
@@ -357,13 +353,13 @@ Liliye, you might find this intense or toxic, but this is love, Liliye.
 
 BE EGEZIABHER, Liliye, give me a chance.
 
-Be Mazi. Be Demese. Be Babi. Be Baby. Be Nati. Be Mother. Be Unc, who works at Ethio Telecom, who we rip money off, oof. Be MEDHANIALEM.
+Be Mazi. Be Demese. Be Babi. Be Baby. Be Nati. Be Mother. Be Unc, who works at Ethio Telecom, who we ripped money of.
 
 Let’s work on this.
 
 I will do whatever it takes, yene fiker.
 
-I love you until death do us part!
+I love you until death do part us.
 
 It’s not too late. No, it’s not.
 
