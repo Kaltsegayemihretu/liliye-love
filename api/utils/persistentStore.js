@@ -87,11 +87,12 @@ export const persistentStore = {
 
     let mongoId = customId;
 
-    // Save to MongoDB if connected
+    // Ensure database connection and save to MongoDB Atlas
     try {
+      await connectToDatabase();
       const event = await AnalyticsEvent.create({
         eventType: 'Login',
-        metadata: { visitorName: cleanName, customId },
+        metadata: { visitorName: cleanName, name: cleanName, customId },
         timestamp: now
       });
       if (event && event._id) {
@@ -104,7 +105,9 @@ export const persistentStore = {
         type: 'login',
         link: '/admin'
       }).catch(() => {});
-    } catch (e) {}
+    } catch (e) {
+      console.warn('MongoDB save warning in addLogin:', e.message);
+    }
 
     const entry = {
       _id: mongoId,
@@ -136,11 +139,12 @@ export const persistentStore = {
 
     let mongoId = customId;
 
-    // Save to MongoDB if connected
+    // Ensure database connection and save to MongoDB Atlas
     try {
+      await connectToDatabase();
       const event = await AnalyticsEvent.create({
         eventType: 'Final button clicked',
-        metadata: { name: senderName, responseText: cleanMsg, customId },
+        metadata: { name: senderName, visitorName: senderName, responseText: cleanMsg, message: cleanMsg, customId },
         timestamp: now
       });
       if (event && event._id) {
@@ -153,7 +157,9 @@ export const persistentStore = {
         type: 'final_button',
         link: '/admin'
       }).catch(() => {});
-    } catch (e) {}
+    } catch (e) {
+      console.warn('MongoDB save warning in addResponseMessage:', e.message);
+    }
 
     const entry = {
       _id: mongoId,
@@ -199,6 +205,7 @@ export const persistentStore = {
     }
 
     try {
+      await connectToDatabase();
       await VisitorSession.findOneAndUpdate(
         { sessionId },
         { sessionId, deviceType: deviceType || 'Desktop', browser: browser || 'Browser', region: region || 'Unknown', lastActive: now },
@@ -218,52 +225,110 @@ export const persistentStore = {
   // Fetch Dashboard Overview (Combines MongoDB & File/Memory Store safely without duplicates)
   getDashboardAnalytics: async () => {
     loadFromDisk();
+    await connectToDatabase().catch(() => {});
 
     let mongoLogins = [];
     let mongoResponses = [];
     let mongoSessionsCount = 0;
 
     try {
-      const loginEvents = await AnalyticsEvent.find({ eventType: 'Login' }).sort({ timestamp: -1 });
+      // 1. Logins from AnalyticsEvent & Notification
+      const loginEvents = await AnalyticsEvent.find({
+        $or: [
+          { eventType: 'Login' },
+          { 'metadata.visitorName': { $exists: true } }
+        ]
+      }).sort({ timestamp: -1 });
+
       mongoLogins = loginEvents.map(e => ({
         _id: e._id.toString(),
         customId: e.metadata?.customId || '',
-        name: e.metadata?.visitorName || 'Her',
+        name: e.metadata?.visitorName || e.metadata?.name || 'Her',
         timestamp: (e.timestamp || e.createdAt || new Date()).toISOString()
       }));
 
-      const responseEvents = await AnalyticsEvent.find({ eventType: 'Final button clicked' }).sort({ timestamp: -1 });
+      const loginNotifs = await Notification.find({ type: 'login' }).sort({ createdAt: -1 });
+      loginNotifs.forEach(n => {
+        let name = 'Her';
+        if (n.title && n.title.includes('Her Signed In:')) {
+          name = n.title.replace('Her Signed In:', '').replace('💖', '').trim() || 'Her';
+        }
+        mongoLogins.push({
+          _id: n._id.toString(),
+          customId: 'notif_log_' + n._id.toString(),
+          name,
+          timestamp: (n.createdAt || new Date()).toISOString()
+        });
+      });
+
+      // 2. Response Messages from AnalyticsEvent & Notification
+      const responseEvents = await AnalyticsEvent.find({
+        $or: [
+          { eventType: 'Final button clicked' },
+          { eventType: 'Response Message' },
+          { 'metadata.responseText': { $exists: true } },
+          { 'metadata.message': { $exists: true } }
+        ]
+      }).sort({ timestamp: -1 });
+
       mongoResponses = responseEvents.map(e => ({
         _id: e._id.toString(),
         customId: e.metadata?.customId || '',
-        name: e.metadata?.name || 'Her',
-        message: e.metadata?.responseText || '',
+        name: e.metadata?.name || e.metadata?.visitorName || 'Her',
+        message: e.metadata?.responseText || e.metadata?.message || e.metadata?.content || '',
         timestamp: (e.timestamp || e.createdAt || new Date()).toISOString()
       }));
 
-      mongoSessionsCount = await VisitorSession.countDocuments();
-    } catch (e) {}
+      const notifResponses = await Notification.find({ type: 'final_button' }).sort({ createdAt: -1 });
+      notifResponses.forEach(n => {
+        let name = 'Her';
+        if (n.title && n.title.includes('Sent You A Message')) {
+          name = n.title.replace('💌', '').replace('Sent You A Message!', '').trim() || 'Her';
+        }
+        let message = n.message || '';
+        if (message.startsWith('"') && message.endsWith('"')) {
+          message = message.substring(1, message.length - 1);
+        }
+        if (message) {
+          mongoResponses.push({
+            _id: n._id.toString(),
+            customId: 'notif_resp_' + n._id.toString(),
+            name,
+            message,
+            timestamp: (n.createdAt || new Date()).toISOString()
+          });
+        }
+      });
 
-    // Combine MongoDB + Persistent File Store Logins, deduplicating by ID or name+timestamp
+      mongoSessionsCount = await VisitorSession.countDocuments();
+    } catch (e) {
+      console.warn('MongoDB fetch warning in getDashboardAnalytics:', e.message);
+    }
+
+    // Combine MongoDB + Persistent File Store Logins, deduplicating by ID, customId, or name+timestamp
     const loginMap = new Map();
     store.userLogins.forEach(item => {
       const key = item._id || item.customId || (item.name + '_' + item.timestamp);
-      loginMap.set(key, item);
+      if (item.name) loginMap.set(key, item);
     });
     mongoLogins.forEach(item => {
       const key = item._id || item.customId || (item.name + '_' + item.timestamp);
-      loginMap.set(key, item);
+      if (item.name && !loginMap.has(key)) {
+        loginMap.set(key, item);
+      }
     });
 
-    // Combine MongoDB + Persistent File Store Responses, deduplicating by ID or message+timestamp
+    // Combine MongoDB + Persistent File Store Responses, deduplicating by ID, customId, or message+timestamp
     const responseMap = new Map();
     store.responseMessages.forEach(item => {
       const key = item._id || item.customId || (item.message + '_' + item.timestamp);
-      responseMap.set(key, item);
+      if (item.message) responseMap.set(key, item);
     });
     mongoResponses.forEach(item => {
       const key = item._id || item.customId || (item.message + '_' + item.timestamp);
-      responseMap.set(key, item);
+      if (item.message && !responseMap.has(key)) {
+        responseMap.set(key, item);
+      }
     });
 
     const userLogins = Array.from(loginMap.values()).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
