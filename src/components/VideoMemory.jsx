@@ -101,7 +101,7 @@ export default function VideoMemory() {
           </p>
 
           <p className="text-base md:text-lg text-slate-700 leading-relaxed font-sans font-medium">
-            Even my family misses you. Fa even gave us his blessing to get married at this point. I didn't want to meet your parents all this time because I thought I would leave unnecessary memories with them if we somehow broke up.
+            Even my family misses you. Fa even gave us her blessing to get married at this point. I didn't want to meet your parents all this time because I thought I would leave unnecessary memories with them if we somehow broke up.
           </p>
 
           <p className="text-base md:text-lg text-slate-700 leading-relaxed font-sans font-medium">
