@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Heart, BookOpen, Clock, MapPin, Shield, Menu, X, User } from 'lucide-react';
+import { Heart, BookOpen, Clock, MapPin, Shield, Menu, X, User, Video } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
@@ -13,6 +13,7 @@ export default function Navbar() {
     { label: 'Story', href: '#hero', icon: Heart },
     { label: 'Memories', href: '#memories', icon: BookOpen },
     { label: 'Letter', href: '#letter', icon: BookOpen },
+    { label: 'Video', href: '#video-memory', icon: Video },
     { label: 'Distance', href: '#locations', icon: MapPin },
   ];
 

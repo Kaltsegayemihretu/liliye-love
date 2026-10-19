@@ -95,6 +95,23 @@ export const AudioProvider = ({ children }) => {
     }
   };
 
+  const pauseBackgroundMusic = () => {
+    if (bgAudioRef.current && !bgAudioRef.current.paused) {
+      bgAudioRef.current.pause();
+      setBgPlaying(false);
+    }
+  };
+
+  const resumeBackgroundMusic = () => {
+    if (bgAudioRef.current && !userManuallyPaused.current && !boomboxActive) {
+      bgAudioRef.current.loop = true;
+      bgAudioRef.current.volume = bgVolume;
+      bgAudioRef.current.play()
+        .then(() => setBgPlaying(true))
+        .catch(() => {});
+    }
+  };
+
   const toggleBackgroundMusic = () => {
     if (!bgAudioRef.current) return;
     const isPlaying = !bgAudioRef.current.paused;
@@ -171,6 +188,8 @@ export const AudioProvider = ({ children }) => {
       bgPlaying,
       toggleBackgroundMusic,
       startBackgroundMusic,
+      pauseBackgroundMusic,
+      resumeBackgroundMusic,
       boomboxActive,
       openBoombox,
       closeBoombox,

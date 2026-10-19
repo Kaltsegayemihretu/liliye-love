@@ -11,6 +11,7 @@ import Navbar from '../components/Navbar';
 import CutoutSticker from '../components/CutoutSticker';
 import WatchClockAnimation from '../components/WatchClockAnimation';
 import InteractiveEnvelope from '../components/InteractiveEnvelope';
+import VideoMemory from '../components/VideoMemory';
 import DistanceMap from '../components/DistanceMap';
 
 export default function Home() {
@@ -299,7 +300,8 @@ export default function Home() {
       {/* 4. INTERACTIVE LOVE LETTER */}
       <InteractiveEnvelope letterData={content?.letter} />
 
-
+      {/* 5. JULY 4 VIDEO MEMORY */}
+      <VideoMemory />
 
       {/* 6. TWO LOCATIONS SECTION */}
       <DistanceMap locationData={locations} />
